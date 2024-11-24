@@ -1,17 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { AlertCircle } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import ImageUpload from "./components/ImageUpload";
-import ProcessingStatus from "./components/ProcessingStatus";
-import DownloadOptions from "./components/DownloadOptions";
-import ImagePreview from "./components/ImagePreview";
-import Tutorial from "./components/Tutorial";
 import { useImageProcessing } from "./hooks/useImageProcessing";
 import Link from "next/link";
 import { useSession } from "next-auth/react"
 import Navbar from "./components/Navbar";
-import PromoCodeSection from "./components/PromoCodeSection";
 
 const referencePresets = [
   { id: 'tokyo-twilight', src: '/reference-images/Tokyo Twilight.jpg', alt: 'Tokyo Twilight' },
@@ -95,7 +89,7 @@ const Home: React.FC = () => {
   const [showPopup, setShowPopup] = useState<boolean>(false);
 
   const { data: session } = useSession();
-  const { processImages, downloadLUT } = useImageProcessing();
+  const { processImages } = useImageProcessing();
 
   useEffect(() => {
     const fetchCredits = async () => {
@@ -129,23 +123,36 @@ const Home: React.FC = () => {
     setIsProcessing(true);
 
     try {
+      // First decrease credits
+      const creditResponse = await fetch("/api/decrease-credits", {
+        method: "POST",
+      });
+      const creditData = await creditResponse.json();
+      
+      if (!creditResponse.ok) {
+        throw new Error(creditData.error || "Failed to process credits");
+      }
+
+      // Then generate LUT
       const processed = await processImages(originalImage, referenceImage);
       setProcessedImage(processed);
       
-      // Decrease credits in the database
-      const response = await fetch("/api/decrease-credits", {
-        method: "POST",
-      });
-      const data = await response.json();
-      
-      if (response.ok) {
-        setCredits(data.credits);
-      } else {
-        console.error("Error decreasing credits:", data.error);
-      }
+      // Update credits state after successful processing
+      setCredits(creditData.credits);
     } catch (err) {
-      setError("Failed to process images. Please try again.");
       console.error(err);
+      setError("Failed to process images. Please try again.");
+      
+      // If error occurred after decreasing credits, try to restore them
+      if (credits !== -1 && credits > 0) {
+        try {
+          const response = await fetch("/api/get-user-credits");
+          const data = await response.json();
+          setCredits(data.credits);
+        } catch (error) {
+          console.error("Error restoring credits:", error);
+        }
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -163,12 +170,6 @@ const Home: React.FC = () => {
             onImageSelect={setOriginalImage}
             onImageRemove={() => setOriginalImage(null)}
           />
-          {/* <ImageUpload
-            title="Reference Image"
-            image={referenceImage}
-            onImageSelect={setReferenceImage}
-            onImageRemove={() => setReferenceImage(null)}
-          /> */}
           <ImageUpload
             title="Reference Image"
             image={referenceImage}
@@ -183,10 +184,11 @@ const Home: React.FC = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => (session ? handleProcess() : setShowPopup(true))}
-            className={`px-8 py-4 rounded-lg font-semibold text-white transition-colors duration-200 ${!originalImage || !referenceImage || isProcessing
-              ? "bg-gray-600/50"
-              : "bg-primary hover:bg-primary-dark"
-              }`}
+            className={`px-8 py-4 rounded-lg font-semibold text-white transition-colors duration-200 ${
+              !originalImage || !referenceImage || isProcessing
+                ? "bg-gray-600/50"
+                : "bg-primary hover:bg-primary-dark"
+            }`}
             disabled={!originalImage || !referenceImage || isProcessing}
           >
             Generate LUT
@@ -200,46 +202,24 @@ const Home: React.FC = () => {
           )}
         </div>
 
-        <AnimatePresence>
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="flex items-center justify-center gap-2 text-red-400"
-            >
-              <AlertCircle size={20} />
-              <span>{error}</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {processedImage && (
+          <div className="flex flex-col items-center gap-4">
+            <img
+              src={processedImage}
+              alt="Processed"
+              className="max-w-full rounded-lg shadow-lg"
+            />
+          </div>
+        )}
 
-        <AnimatePresence>{isProcessing && <ProcessingStatus />}</AnimatePresence>
+        {error && (
+          <div className="text-red-500 text-center">{error}</div>
+        )}
 
         <AnimatePresence>
-          {processedImage && (
-            <>
-              <ImagePreview
-                originalImage={originalImage!}
-                referenceImage={referenceImage!}
-                processedImage={processedImage}
-              />
-              <DownloadOptions onDownload={downloadLUT} />
-            </>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {showTutorial && <Tutorial onClose={() => setShowTutorial(false)} />}
-        </AnimatePresence>
-        <AnimatePresence>
-          {showAffilate && <PromoCodeSection userId={session?.user?.id || ""} onClose={() => setShowAffiliate(false)} />}
+          {showPopup && <Popup onClose={() => setShowPopup(false)} />}
         </AnimatePresence>
       </main>
-
-      <AnimatePresence>
-        {showPopup && <Popup onClose={() => setShowPopup(false)} />}
-      </AnimatePresence>
     </div>
   );
 };
