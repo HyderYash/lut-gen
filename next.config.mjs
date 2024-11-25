@@ -4,9 +4,6 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   output: 'standalone',
-  experimental: {
-    serverActions: true,
-  },
 };
 
 export default nextConfig;
