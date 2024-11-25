@@ -96,11 +96,14 @@ const Home: React.FC = () => {
       if (session) {
         try {
           const response = await fetch("/api/get-user-credits");
+          if (!response.ok) {
+            throw new Error("Failed to fetch credits");
+          }
           const data = await response.json();
           setCredits(data.credits);
         } catch (error) {
           console.error("Error fetching credits:", error);
-          setCredits(0);
+          setError("Failed to load credits. Please refresh the page.");
         }
       } else {
         setCredits(0);

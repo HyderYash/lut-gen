@@ -88,17 +88,36 @@ export const authOptions: NextAuthConfig = {
       }
     },
     async session({ session, user }) {
+      // Get fresh user data from database
+      const dbUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          image: true,
+          plan: true,
+          referralCode: true,
+          credits: true,
+          customerId: true,
+        },
+      });
+
+      if (!dbUser) {
+        return session;
+      }
+
       return {
         ...session,
         user: {
           ...session.user,
-          id: user.id,
-          plan: user.plan,
-          referralCode: user.referralCode || undefined,
-          credits: user.credits,
-          customerId: user.customerId || undefined,
+          id: dbUser.id,
+          plan: dbUser.plan,
+          referralCode: dbUser.referralCode || undefined,
+          credits: dbUser.credits,
+          customerId: dbUser.customerId || undefined,
         },
-      }
+      };
     },
   },
   pages: {
