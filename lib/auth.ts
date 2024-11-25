@@ -12,7 +12,13 @@ export const authOptions: NextAuthConfig = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      allowDangerousEmailAccountLinking: true,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code"
+        }
+      }
     }),
     CredentialsProvider({
       name: "credentials",
@@ -42,8 +48,7 @@ export const authOptions: NextAuthConfig = {
           return null
         }
 
-        // Convert Prisma User to NextAuth User
-        const user: User = {
+        return {
           id: dbUser.id,
           email: dbUser.email,
           name: dbUser.name,
@@ -53,8 +58,6 @@ export const authOptions: NextAuthConfig = {
           credits: dbUser.credits,
           customerId: dbUser.customerId || undefined,
         }
-
-        return user
       },
     }),
   ],
@@ -97,9 +100,6 @@ export const authOptions: NextAuthConfig = {
         },
       }
     },
-    async redirect({ url, baseUrl }) {
-      return url.startsWith(baseUrl) ? url : baseUrl
-    },
   },
   pages: {
     signIn: "/auth/signin",
@@ -107,9 +107,14 @@ export const authOptions: NextAuthConfig = {
     newUser: "/auth/referral"
   },
   adapter: PrismaAdapter(prisma) as any,
-  session: { strategy: "database" },
+  session: { 
+    strategy: "database",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+    updateAge: 24 * 60 * 60, // 24 hours
+  },
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === "development",
+  trustHost: true,
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth(authOptions)
