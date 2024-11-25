@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
         name,
         image,
         plan: PLANS.FREE,
+        credits: 15, // Give new users 15 free credits
         usedReferralCode: referralCode || null,
         customerId: `cus_${Math.random().toString(36).substring(2, 15)}`,
       },

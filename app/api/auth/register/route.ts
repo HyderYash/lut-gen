@@ -41,7 +41,7 @@ export async function POST(req: Request) {
         plan: PLANS.FREE,
         customerId,
         referralCode: userReferralCode,
-        credits: 0,
+        credits: 15,
         usedReferralCode: referralCode || undefined,
       },
     })
