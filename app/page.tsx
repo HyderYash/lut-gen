@@ -93,19 +93,35 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     const fetchCredits = async () => {
+      console.log("Checking session for credits fetch:", {
+        hasSession: !!session,
+        sessionData: session
+      });
+
       if (session) {
         try {
-          const response = await fetch("/api/get-user-credits");
+          console.log("Fetching credits from API...");
+          const response = await fetch("/api/get-user-credits", {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+          
+          console.log("API Response status:", response.status);
           if (!response.ok) {
-            throw new Error("Failed to fetch credits");
+            throw new Error(`Failed to fetch credits: ${response.status}`);
           }
+          
           const data = await response.json();
+          console.log("Credits API response:", data);
           setCredits(data.credits);
         } catch (error) {
           console.error("Error fetching credits:", error);
           setError("Failed to load credits. Please refresh the page.");
         }
       } else {
+        console.log("No session, setting credits to 0");
         setCredits(0);
       }
     };
