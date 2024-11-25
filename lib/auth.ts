@@ -76,7 +76,7 @@ export const authOptions: NextAuthConfig = {
                 name: user.name,
                 image: user.image,
                 plan: "free",
-                credits: 0,
+                credits: 15, // Give new Google users 15 free credits
               },
             })
           }
