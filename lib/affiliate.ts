@@ -78,6 +78,27 @@ export async function processCommission(referrerId: string, amount: number, desc
   };
 }
 
+export async function updateReferralStats(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  // Update user's referral stats
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      totalReferrals: { increment: 1 },
+      monthlyReferrals: { increment: 1 },
+    },
+  });
+
+  return true;
+}
+
 export async function getAffiliateStats(userId: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },

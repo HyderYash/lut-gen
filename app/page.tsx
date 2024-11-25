@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import ImageUpload from "./components/ImageUpload";
 import { useImageProcessing } from "./hooks/useImageProcessing";
 import Link from "next/link";
@@ -114,7 +114,7 @@ const Home: React.FC = () => {
     if (!originalImage || !referenceImage) return;
     
     // Check if user has unlimited credits (credits === -1) or has remaining credits
-    if (credits !== -1 && credits <= 0) {
+    if (credits === null || (credits !== -1 && credits <= 0)) {
       setError("You have reached the maximum limit of LUTs. Please upgrade your plan for more.");
       return;
     }

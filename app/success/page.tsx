@@ -3,6 +3,7 @@
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { CheckCircle } from 'lucide-react';
+import { Suspense } from "react";
 
 interface PaymentDetails {
   plan: string;
@@ -11,7 +12,7 @@ interface PaymentDetails {
   credits: number;
 }
 
-export default function SuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session_id');
   const [paymentDetails, setPaymentDetails] = useState<PaymentDetails | null>(null);
@@ -92,4 +93,12 @@ export default function SuccessPage() {
       </div>
     </div>
   );
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SuccessContent />
+    </Suspense>
+  )
 }

@@ -9,8 +9,8 @@ export function generateCubeLUT(lutData: LUTData): string {
   for (let b = 0; b < size; b++) {
     for (let g = 0; g < size; g++) {
       for (let r = 0; r < size; r++) {
-        const [rr, gg, bb] = data[b][g][r];
-        content += `${rr.toFixed(6)} ${gg.toFixed(6)} ${bb.toFixed(6)}\n`;
+        const rgb = data[b][g][r];
+        content += `${rgb.r.toFixed(6)} ${rgb.g.toFixed(6)} ${rgb.b.toFixed(6)}\n`;
       }
     }
   }
@@ -26,8 +26,8 @@ export function generate3dlLUT(lutData: LUTData): string {
   for (let b = 0; b < size; b++) {
     for (let g = 0; g < size; g++) {
       for (let r = 0; r < size; r++) {
-        const [rr, gg, bb] = data[b][g][r];
-        content += `${Math.round(rr * 1023)} ${Math.round(gg * 1023)} ${Math.round(bb * 1023)}\n`;
+        const rgb = data[b][g][r];
+        content += `${Math.round(rgb.r * 1023)} ${Math.round(rgb.g * 1023)} ${Math.round(rgb.b * 1023)}\n`;
       }
     }
   }

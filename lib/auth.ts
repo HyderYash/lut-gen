@@ -1,12 +1,13 @@
-import type { NextAuthConfig } from "next-auth"
+import { NextAuthConfig } from "next-auth"
 import NextAuth from "next-auth"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 import GoogleProvider from "next-auth/providers/google"
 import CredentialsProvider from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
+import { User } from "next-auth"
 
-export const config: NextAuthConfig = {
+export const authOptions: NextAuthConfig = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -19,23 +20,38 @@ export const config: NextAuthConfig = {
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials): Promise<User | null> {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("Email and password required")
+          return null
         }
 
-        const user = await prisma.user.findUnique({
+        const dbUser = await prisma.user.findUnique({
           where: { email: credentials.email as string },
         })
 
-        if (!user || !user.password) {
-          throw new Error("User not found")
+        if (!dbUser?.password) {
+          return null
         }
 
-        const isValid = await bcrypt.compare(credentials.password as string, user.password as string)
+        const isValid = await bcrypt.compare(
+          credentials.password as string,
+          dbUser.password
+        )
 
         if (!isValid) {
-          throw new Error("Invalid password")
+          return null
+        }
+
+        // Convert Prisma User to NextAuth User
+        const user: User = {
+          id: dbUser.id,
+          email: dbUser.email,
+          name: dbUser.name,
+          image: dbUser.image,
+          plan: dbUser.plan,
+          referralCode: dbUser.referralCode || undefined,
+          credits: dbUser.credits,
+          customerId: dbUser.customerId || undefined,
         }
 
         return user
@@ -51,48 +67,38 @@ export const config: NextAuthConfig = {
           })
 
           if (!existingUser) {
-            const customerId = `cus_${Math.random().toString(36).substring(2, 15)}`
-            const initialReferralCode = `REF_${Math.random().toString(36).substring(2, 10).toUpperCase()}`
-            
             await prisma.user.create({
               data: {
                 email: user.email!,
                 name: user.name,
                 image: user.image,
                 plan: "free",
-                customerId,
                 credits: 0,
-                referralCode: initialReferralCode,
               },
             })
           }
         }
         return true
       } catch (error) {
-        console.error("Sign in error:", error)
+        console.error("Error in signIn callback:", error)
         return false
       }
     },
     async session({ session, user }) {
-      if (session.user) {
-        const dbUser = await prisma.user.findUnique({
-          where: { email: session.user.email! },
-        })
-
-        if (dbUser) {
-          session.user.id = dbUser.id
-          session.user.plan = dbUser.plan
-          session.user.referralCode = dbUser.referralCode || ""
-          session.user.credits = dbUser.credits
-          session.user.customerId = dbUser.customerId || ""
-        }
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: user.id,
+          plan: user.plan,
+          referralCode: user.referralCode || undefined,
+          credits: user.credits,
+          customerId: user.customerId || undefined,
+        },
       }
-      return session
     },
     async redirect({ url, baseUrl }) {
-      if (url.startsWith(baseUrl)) return url
-      if (url.startsWith("/")) return `${baseUrl}${url}`
-      return baseUrl
+      return url.startsWith(baseUrl) ? url : baseUrl
     },
   },
   pages: {
@@ -100,10 +106,10 @@ export const config: NextAuthConfig = {
     error: "/auth/error",
     newUser: "/auth/referral"
   },
-  adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prisma) as any,
   session: { strategy: "database" },
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === "development",
 }
 
-export const { handlers, auth, signIn, signOut } = NextAuth(config)
+export const { handlers, auth, signIn, signOut } = NextAuth(authOptions)

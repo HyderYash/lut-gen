@@ -65,6 +65,7 @@ model User {
   sessions        Session[]
   referredBy      User?     @relation("ReferralRelation", fields: [usedReferralCode], references: [referralCode], onDelete: NoAction, onUpdate: NoAction)
   referredUsers   User[]    @relation("ReferralRelation")
+  promoCodes      PromoCode[]
   
   // Affiliate Transactions
   affiliateTransactions AffiliateTransaction[]
@@ -86,6 +87,21 @@ model AffiliateTransaction {
   type          String   // "commission", "milestone_bonus", "monthly_reward"
   description   String
   createdAt     DateTime @default(now())
+
+  @@index([userId])
+}
+
+model PromoCode {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  code          String   @unique
+  discount      Float    @default(0)
+  maxUses       Int      @default(1)
+  currentUses   Int      @default(0)
+  userId        String   @db.ObjectId
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt     DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@index([userId])
 }

@@ -52,4 +52,12 @@ const AuthError = () => {
   )
 }
 
-export default AuthError
+import { Suspense } from "react"
+
+export default function ErrorPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AuthError />
+    </Suspense>
+  )
+}

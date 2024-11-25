@@ -19,7 +19,7 @@ export default function AffiliatePage() {
   if (status === "loading") {
     return (
       <div className="min-h-screen">
-        <Navbar />
+        <Navbar setShowTutorial={() => {}} setShowAffiliate={() => {}} />
         <div className="flex items-center justify-center min-h-[80vh]">
           <div className="text-center">Loading...</div>
         </div>
@@ -33,7 +33,7 @@ export default function AffiliatePage() {
 
   return (
     <div className="min-h-screen">
-      <Navbar />
+      <Navbar setShowTutorial={() => {}} setShowAffiliate={() => {}} />
               
       <AffiliateStats />
       <div className="container mx-auto px-4 py-8">

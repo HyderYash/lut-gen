@@ -8,31 +8,32 @@ export async function POST(request: Request) {
     try {
         const { referrerCode, referredUserId } = await request.json();
 
-        // Find the referrer's affiliate account
-        const referrerAffiliate = await prisma.affiliate.findUnique({
+        // Find the referrer
+        const referrer = await prisma.user.findUnique({
             where: { referralCode: referrerCode }
         });
 
-        if (!referrerAffiliate) {
+        if (!referrer) {
             return NextResponse.json({
                 message: 'Invalid referral code'
             }, { status: 400 });
         }
 
         // Update referral count and determine commission tier
-        const updatedAffiliate = await prisma.affiliate.update({
-            where: { id: referrerAffiliate.id },
+        const updatedUser = await prisma.user.update({
+            where: { id: referrer.id },
             data: {
                 totalReferrals: { increment: 1 },
-                commissionTier: determineCommissionTier(referrerAffiliate.totalReferrals + 1),
-                referralLinks: { push: referredUserId }
+                currentTier: determineCommissionTier(referrer.totalReferrals + 1),
+                monthlyReferrals: { increment: 1 }
             }
         });
 
         return NextResponse.json({
             success: true,
-            commissionTier: updatedAffiliate.commissionTier,
-            totalReferrals: updatedAffiliate.totalReferrals
+            currentTier: updatedUser.currentTier,
+            totalReferrals: updatedUser.totalReferrals,
+            monthlyReferrals: updatedUser.monthlyReferrals
         }, { status: 200 });
     } catch (error) {
         console.error('Referral tracking error:', error);
@@ -43,8 +44,8 @@ export async function POST(request: Request) {
 }
 
 function determineCommissionTier(totalReferrals: number): number {
-    if (totalReferrals < 11) return 20;
-    if (totalReferrals < 21) return 25;
-    if (totalReferrals < 51) return 30;
-    return 35;
+    if (totalReferrals < 11) return 1; // 20%
+    if (totalReferrals < 21) return 2; // 25%
+    if (totalReferrals < 51) return 3; // 30%
+    return 4; // 35%
 }

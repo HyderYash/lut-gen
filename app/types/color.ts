@@ -22,16 +22,20 @@ export interface ColorAdjustments {
 }
 
 export interface ColorStats {
-  min: number
-  max: number
-  mean: number
-  median: number
-  std: number
+  min: RGB
+  max: RGB
+  mean: RGB
+  median: RGB
+  std: RGB
 }
 
 export interface LUTData {
   size: number
-  data: RGB[]
+  data: RGB[][][]
 }
 
-export type RGBColor = [number, number, number]
+export interface RGBColor {
+  r: number
+  g: number
+  b: number
+}

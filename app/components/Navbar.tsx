@@ -8,9 +8,10 @@ import { signOut, useSession } from "next-auth/react"
 
 interface NavbarProps {
   setShowTutorial: (show: boolean) => void
+  setShowAffiliate?: (show: boolean) => void
 }
 
-const Navbar = ({ setShowTutorial }: NavbarProps) => {
+const Navbar = ({ setShowTutorial, setShowAffiliate }: NavbarProps) => {
   const [menuOpen, setMenuOpen] = useState<boolean>(false)
   const { data: session } = useSession()
 

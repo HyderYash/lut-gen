@@ -119,7 +119,7 @@ export async function POST(req: Request) {
                 const subscription = event.data.object as Stripe.Subscription;
                 const customer = await stripe.customers.retrieve(subscription.customer as string);
                 
-                if (!customer.email) {
+                if (!('email' in customer) || !customer.email) {
                     throw new Error("No customer email found");
                 }
 
@@ -142,7 +142,7 @@ export async function POST(req: Request) {
                 const subscription = event.data.object as Stripe.Subscription;
                 const customer = await stripe.customers.retrieve(subscription.customer as string);
                 
-                if (!customer.email) {
+                if (!('email' in customer) || !customer.email) {
                     throw new Error("No customer email found");
                 }
 
