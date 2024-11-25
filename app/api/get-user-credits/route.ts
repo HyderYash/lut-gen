@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
+// Mark route as dynamic since we use headers in auth
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: Request) {
   console.log("GET /api/get-user-credits - Request received");
   
