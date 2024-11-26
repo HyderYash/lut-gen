@@ -93,35 +93,49 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     const fetchCredits = async () => {
-      console.log("Checking session for credits fetch:", {
+      console.log("[Frontend] Checking session for credits fetch:", {
         hasSession: !!session,
-        sessionData: session
+        email: session?.user?.email || 'none'
       });
 
       if (session) {
         try {
-          console.log("Fetching credits from API...");
+          console.log("[Frontend] Fetching credits from API...");
           const response = await fetch("/api/get-user-credits", {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
             },
+            cache: 'no-store'  // Disable cache
           });
           
-          console.log("API Response status:", response.status);
+          console.log("[Frontend] API Response status:", response.status);
+          
           if (!response.ok) {
-            throw new Error(`Failed to fetch credits: ${response.status}`);
+            const errorData = await response.json();
+            console.error("[Frontend] API error:", errorData);
+            throw new Error(errorData.error || `Failed to fetch credits: ${response.status}`);
           }
           
           const data = await response.json();
-          console.log("Credits API response:", data);
+          console.log("[Frontend] Credits API response:", data);
+          
+          if (typeof data.credits !== 'number') {
+            console.error("[Frontend] Invalid credits value:", data);
+            throw new Error("Invalid credits value received");
+          }
+          
           setCredits(data.credits);
+          if (data.error) {
+            setError(data.error);
+          }
         } catch (error) {
-          console.error("Error fetching credits:", error);
+          console.error("[Frontend] Error fetching credits:", error);
           setError("Failed to load credits. Please refresh the page.");
+          // Keep previous credits value if any
         }
       } else {
-        console.log("No session, setting credits to 0");
+        console.log("[Frontend] No session, setting credits to 0");
         setCredits(0);
       }
     };
