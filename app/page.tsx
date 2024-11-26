@@ -93,52 +93,15 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     const fetchCredits = async () => {
-      console.log("[Frontend] Checking session for credits fetch:", {
-        hasSession: !!session,
-        email: session?.user?.email || 'none'
-      });
-
-      if (session) {
-        try {
-          console.log("[Frontend] Fetching credits from API...");
-          const response = await fetch("/api/get-user-credits", {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              "Cache-Control": "no-cache, no-store, must-revalidate",
-              "Pragma": "no-cache"
-            },
-            cache: "no-store",
-            next: { revalidate: 0 }
-          });
-          
-          console.log("[Frontend] API Response status:", response.status);
-          
-          if (!response.ok) {
-            const errorData = await response.json();
-            console.error("[Frontend] API error:", errorData);
-            throw new Error(errorData.error || `Failed to fetch credits: ${response.status}`);
-          }
-          
-          const data = await response.json();
-          console.log("[Frontend] Credits API response:", data);
-          
-          if (typeof data.credits !== 'number') {
-            console.error("[Frontend] Invalid credits value:", data);
-            throw new Error("Invalid credits value received");
-          }
-          
-          setCredits(data.credits);
-          if (data.error) {
-            setError(data.error);
-          }
-        } catch (error) {
-          console.error("[Frontend] Error fetching credits:", error);
-          setError("Failed to load credits. Please refresh the page.");
-          // Keep previous credits value if any
-        }
-      } else {
-        console.log("[Frontend] No session, setting credits to 0");
+      try {
+        const response = await fetch('/api/get-user-credits', {
+          cache: 'no-store',
+          credentials: 'include'
+        });
+        const data = await response.json();
+        setCredits(data.credits);
+      } catch (error) {
+        console.error('Error fetching credits:', error);
         setCredits(0);
       }
     };
