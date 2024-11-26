@@ -105,8 +105,11 @@ const Home: React.FC = () => {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
+              "Cache-Control": "no-cache, no-store, must-revalidate",
+              "Pragma": "no-cache"
             },
-            cache: 'no-store'  // Disable cache
+            cache: "no-store",
+            next: { revalidate: 0 }
           });
           
           console.log("[Frontend] API Response status:", response.status);
@@ -141,6 +144,10 @@ const Home: React.FC = () => {
     };
 
     fetchCredits();
+
+    const intervalId = setInterval(fetchCredits, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(intervalId);
   }, [session]);
 
   const handleProcess = async () => {

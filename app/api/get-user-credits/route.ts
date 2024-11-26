@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
-// Mark route as dynamic since we use headers in auth
+// Force dynamic and disable static optimization
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge'; // Optional: Use edge runtime for better performance
-export const revalidate = 0; // Disable cache
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
 
 export async function GET(request: Request) {
   console.log("[Vercel] GET /api/get-user-credits - Request received");
@@ -83,15 +83,23 @@ export async function GET(request: Request) {
       finalCredits
     });
 
-    // 6. Send response
-    const response = { 
+    // 6. Send response with cache control headers
+    const response = NextResponse.json({ 
       credits: finalCredits,
       plan: user.plan,
       timestamp: new Date().toISOString()
-    };
+    });
+
+    // Add cache control headers
+    response.headers.set('Cache-Control', 'no-store, must-revalidate');
+    response.headers.set('Pragma', 'no-cache');
     
-    console.log("[Vercel] Sending response:", response);
-    return NextResponse.json(response);
+    console.log("[Vercel] Sending response:", {
+      credits: finalCredits,
+      plan: user.plan
+    });
+    
+    return response;
 
   } catch (error) {
     // Log any unexpected errors
