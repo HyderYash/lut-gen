@@ -1,29 +1,91 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import prisma from "@/db/prisma";
+import { prisma } from "@/lib/prisma";
+import { headers } from 'next/headers';
 
-export async function GET(req: Request) {
-    try {
-        const session = await auth();
-        
-        if (!session?.user?.email) {
-            return NextResponse.json({ error: 'Unauthorized: No user found' }, { status: 401 });
+// Segment config
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+
+export async function GET() {
+  try {
+    const headersList = headers();
+    console.log("[Vercel] Headers received:", headersList.get("user-agent"));
+
+    const session = await auth();
+    console.log("[Vercel] Session state:", {
+      hasSession: !!session,
+      email: session?.user?.email || 'none'
+    });
+
+    if (!session?.user?.email) {
+      return new NextResponse(
+        JSON.stringify({ plan: "free", error: "No valid session" }),
+        {
+          status: 401,
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          }
         }
-
-        const email = session.user.email;
-
-        // Fetch the user from the database using Prisma
-        const dbUser = await prisma.user.findUnique({
-            where: { email },
-        });
-
-        if (!dbUser) {
-            return NextResponse.json({ error: 'User not found in database' }, { status: 404 });
-        }
-
-        return NextResponse.json({ plan: dbUser.plan || 'Free' });
-    } catch (error) {
-        console.error('Error fetching user account type:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+      );
     }
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { 
+        plan: true,
+        email: true
+      },
+    });
+
+    console.log("[Vercel] User data:", {
+      found: !!user,
+      plan: user?.plan || 'free'
+    });
+
+    if (!user) {
+      return new NextResponse(
+        JSON.stringify({ plan: "free", error: "User not found" }),
+        {
+          status: 404,
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          }
+        }
+      );
+    }
+
+    return new NextResponse(
+      JSON.stringify({
+        plan: user.plan || "free",
+        timestamp: new Date().toISOString()
+      }),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      }
+    );
+
+  } catch (error) {
+    console.error("[Vercel] Error in get-user-account-type:", error);
+    return new NextResponse(
+      JSON.stringify({ plan: "free", error: "Server error" }),
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      }
+    );
+  }
 }

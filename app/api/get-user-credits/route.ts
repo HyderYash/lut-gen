@@ -1,112 +1,97 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { headers } from 'next/headers';
 
-// Force dynamic and disable static optimization
+// Segment config
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
-export const revalidate = 0;
 
-export async function GET(request: Request) {
-  console.log("[Vercel] GET /api/get-user-credits - Request received");
-  
+export async function GET() {
   try {
-    // 1. Get session with error handling
-    let session;
-    try {
-      session = await auth();
-      console.log("[Vercel] Auth completed:", {
-        hasSession: !!session,
-        hasUser: !!session?.user,
-        email: session?.user?.email || 'none'
-      });
-    } catch (authError) {
-      console.error("[Vercel] Auth error:", authError);
-      return NextResponse.json(
-        { credits: 0, error: "Authentication failed" },
-        { status: 401 }
-      );
-    }
+    const headersList = headers();
+    console.log("[Vercel] Headers received:", headersList.get("user-agent"));
 
-    // 2. Validate session
+    const session = await auth();
+    console.log("[Vercel] Session state:", {
+      hasSession: !!session,
+      email: session?.user?.email || 'none'
+    });
+
     if (!session?.user?.email) {
-      console.log("[Vercel] No valid session found");
-      return NextResponse.json(
-        { credits: 0, error: "No valid session" },
-        { status: 401 }
+      return new NextResponse(
+        JSON.stringify({ credits: 0, error: "No valid session" }),
+        {
+          status: 401,
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          }
+        }
       );
     }
 
-    // 3. Get user from database with error handling
-    let user;
-    try {
-      user = await prisma.user.findUnique({
-        where: { email: session.user.email },
-        select: { 
-          credits: true, 
-          plan: true,
-          email: true // Add email for logging
-        },
-      });
-      console.log("[Vercel] Database query completed:", {
-        userFound: !!user,
-        email: session.user.email,
-        plan: user?.plan || 'none',
-        credits: user?.credits || 0
-      });
-    } catch (dbError) {
-      console.error("[Vercel] Database error:", dbError);
-      return NextResponse.json(
-        { credits: 0, error: "Database error" },
-        { status: 500 }
-      );
-    }
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { 
+        credits: true, 
+        plan: true,
+        email: true
+      },
+    });
 
-    // 4. Validate user
+    console.log("[Vercel] User data:", {
+      found: !!user,
+      plan: user?.plan || 'none',
+      credits: user?.credits
+    });
+
     if (!user) {
-      console.log("[Vercel] User not found in database:", session.user.email);
-      return NextResponse.json(
-        { credits: 0, error: "User not found" },
-        { status: 404 }
+      return new NextResponse(
+        JSON.stringify({ credits: 0, error: "User not found" }),
+        {
+          status: 404,
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          }
+        }
       );
     }
 
-    // 5. Calculate credits
     const hasUnlimitedCredits = user.credits === -1 || user.plan?.toLowerCase() === "premium";
     const finalCredits = hasUnlimitedCredits ? -1 : user.credits;
 
-    console.log("[Vercel] Credits calculation:", {
-      email: user.email,
-      plan: user.plan,
-      hasUnlimitedCredits,
-      originalCredits: user.credits,
-      finalCredits
-    });
-
-    // 6. Send response with cache control headers
-    const response = NextResponse.json({ 
-      credits: finalCredits,
-      plan: user.plan,
-      timestamp: new Date().toISOString()
-    });
-
-    // Add cache control headers
-    response.headers.set('Cache-Control', 'no-store, must-revalidate');
-    response.headers.set('Pragma', 'no-cache');
-    
-    console.log("[Vercel] Sending response:", {
-      credits: finalCredits,
-      plan: user.plan
-    });
-    
-    return response;
+    return new NextResponse(
+      JSON.stringify({
+        credits: finalCredits,
+        plan: user.plan,
+        timestamp: new Date().toISOString()
+      }),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      }
+    );
 
   } catch (error) {
-    // Log any unexpected errors
-    console.error("[Vercel] Unexpected error in get-user-credits:", error);
-    return NextResponse.json(
-      { credits: 0, error: "Unexpected error" },
-      { status: 500 }
+    console.error("[Vercel] Error in get-user-credits:", error);
+    return new NextResponse(
+      JSON.stringify({ credits: 0, error: "Server error" }),
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      }
     );
   }
 }
