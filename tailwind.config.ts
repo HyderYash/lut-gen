@@ -1,7 +1,6 @@
 import type { Config } from "tailwindcss";
 import plugin from 'tailwindcss/plugin'
 
-
 const config: Config = {
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
@@ -33,6 +32,25 @@ const config: Config = {
           950: '#0d0d0d',
         },
       },
+      keyframes: {
+        'scroll-left': {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(calc(-100% - 3rem))' }
+        },
+        'scroll-right': {
+          '0%': { transform: 'translateX(-50%)' },
+          '100%': { transform: 'translateX(0)' }
+        },
+        'line-scroll': {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' }
+        }
+      },
+      animation: {
+        'scroll-left': 'scroll-left 25s linear infinite',
+        'scroll-right': 'scroll-right 25s linear infinite',
+        'line-scroll': 'line-scroll 3s ease-in-out infinite'
+      }
     },
   },
   plugins: [

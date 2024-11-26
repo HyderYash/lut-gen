@@ -1,20 +1,14 @@
 "use client"
 import React, { useCallback, useState, useRef } from 'react';
-import { Upload, X, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-interface PresetImage {
-  id: string;
-  src: string;
-  alt: string;
-}
 
 interface ImageUploadProps {
   title: string;
   image: string | null;
   onImageSelect: (image: string) => void;
   onImageRemove: () => void;
-  presetImages?: PresetImage[];
+  presetImages?: Array<{ id: string; src: string; alt: string }>;
 }
 
 const ImageUpload: React.FC<ImageUploadProps> = ({
@@ -24,65 +18,37 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   onImageRemove,
   presetImages = [],
 }) => {
-  const [error, setError] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
   const [showPresets, setShowPresets] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [hoveredPreset, setHoveredPreset] = useState<string | null>(null);
   const sliderRef = useRef<HTMLDivElement>(null);
 
-  const validateFile = (file: File): boolean => {
-    if (!file.type.startsWith('image/')) {
-      setError('Please upload an image file');
-      return false;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      setError('File size must be less than 10MB');
-      return false;
-    }
-    setError(null);
-    return true;
-  };
-
-  const processFile = (file: File) => {
-    if (!validateFile(file)) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      onImageSelect(event.target?.result as string);
-    };
-    reader.onerror = () => {
-      setError('Error reading file');
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      setIsDragging(false);
-      const file = e.dataTransfer.files[0];
-      if (file) processFile(file);
-    },
-    [onImageSelect]
-  );
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-  }, []);
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) processFile(file);
-  };
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          onImageSelect(e.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  }, [onImageSelect]);
 
-  const handlePresetImageSelect = (presetImage: PresetImage) => {
-    onImageSelect(presetImage.src);
-  };
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          onImageSelect(e.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  }, [onImageSelect]);
 
   const scrollSlider = (direction: 'left' | 'right') => {
     if (sliderRef.current) {
@@ -93,6 +59,11 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       });
     }
   };
+
+  // Shuffle presets array
+  const shuffledPresets = React.useMemo(() => {
+    return [...presetImages].sort(() => Math.random() - 0.5);
+  }, [presetImages]);
 
   return (
     <motion.div
@@ -107,7 +78,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             onClick={() => setShowPresets(!showPresets)}
             className="text-primary hover:text-primary-light transition-colors"
           >
-            {showPresets ? 'Hide Presets' : 'Show Presets'}
+            <ImageIcon size={24} />
           </button>
         )}
       </div>
@@ -139,13 +110,15 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                     WebkitOverflowScrolling: 'touch'
                   }}
                 >
-                  {presetImages.map((preset) => (
+                  {shuffledPresets.map((preset) => (
                     <motion.div
                       key={preset.id}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => handlePresetImageSelect(preset)}
-                      className="flex-shrink-0 w-48 h-32 cursor-pointer rounded-lg overflow-hidden shadow-lg scroll-snap-align-center"
+                      onClick={() => onImageSelect(preset.src)}
+                      onMouseEnter={() => setHoveredPreset(preset.id)}
+                      onMouseLeave={() => setHoveredPreset(null)}
+                      className="flex-shrink-0 w-48 h-32 cursor-pointer rounded-lg overflow-hidden shadow-lg scroll-snap-align-center relative"
                       style={{ scrollSnapAlign: 'center' }}
                     >
                       <img
@@ -153,6 +126,17 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                         alt={preset.alt}
                         className="w-full h-full object-cover"
                       />
+                      {hoveredPreset === preset.id && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="absolute inset-0 bg-black/50 flex items-center justify-center p-2"
+                        >
+                          <p className="text-white text-sm font-medium text-center">
+                            {preset.alt}
+                          </p>
+                        </motion.div>
+                      )}
                     </motion.div>
                   ))}
                 </div>
@@ -167,19 +151,20 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
               </motion.div>
             )}
 
-            {/* Rest of the upload area remains the same as previous version */}
+            {/* Upload Area */}
             <motion.div
               key="upload"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors duration-200 ${isDragging ? 'border-primary bg-primary/10' : 'border-white/20 hover:border-primary hover:bg-white/5'}`}
+              className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors duration-200 ${
+                !image ? 'border-gray-700 hover:border-primary hover:bg-primary/5' : ''
+              }`}
               onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
+              onDragOver={(e) => e.preventDefault()}
             >
-              {/* Upload input and label remains the same */}
               <input
+                ref={fileInputRef}
                 type="file"
                 accept="image/*"
                 onChange={handleFileSelect}
@@ -195,14 +180,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                   Drag and drop your image here
                 </p>
                 <p className="text-gray-400 text-sm">
-                  or click to browse (JPEG, PNG, TIFF)
+                  or click to browse
                 </p>
-                {error && (
-                  <div className="flex items-center gap-2 text-red-400 mt-4">
-                    <AlertCircle size={16} />
-                    <span className="text-sm">{error}</span>
-                  </div>
-                )}
               </label>
             </motion.div>
           </>
@@ -212,12 +191,12 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="relative"
+            className="relative rounded-lg overflow-hidden"
           >
             <img
               src={image}
               alt={title}
-              className="w-full h-64 object-cover rounded-lg"
+              className="w-full h-64 object-cover"
             />
             <motion.button
               whileHover={{ scale: 1.1 }}

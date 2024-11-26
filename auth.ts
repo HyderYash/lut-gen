@@ -61,7 +61,7 @@ export const config: NextAuthConfig = {
                 image: user.image,
                 plan: "free",
                 customerId,
-                credits: 0,
+                credits: 15,
                 referralCode: initialReferralCode,
               },
             })

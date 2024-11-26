@@ -6,6 +6,10 @@ import { useImageProcessing } from "./hooks/useImageProcessing";
 import Link from "next/link";
 import { useSession } from "next-auth/react"
 import Navbar from "./components/Navbar";
+import ImagePreview from "./components/ImagePreview";
+import DownloadOptions from "./components/DownloadOptions";
+import LoadingSpinner from "./components/LoadingSpinner";
+import CompanySlider from "./components/CompanySlider";
 
 const referencePresets = [
   { id: 'tokyo-twilight', src: '/reference-images/Tokyo Twilight.jpg', alt: 'Tokyo Twilight' },
@@ -89,7 +93,7 @@ const Home: React.FC = () => {
   const [showPopup, setShowPopup] = useState<boolean>(false);
 
   const { data: session } = useSession();
-  const { processImages } = useImageProcessing();
+  const { processImages, downloadLUT } = useImageProcessing();
 
   useEffect(() => {
     const fetchCredits = async () => {
@@ -116,7 +120,6 @@ const Home: React.FC = () => {
   const handleProcess = async () => {
     if (!originalImage || !referenceImage) return;
     
-    // Check if user has unlimited credits (credits === -1) or has remaining credits
     if (credits === null || (credits !== -1 && credits <= 0)) {
       setError("You have reached the maximum limit of LUTs. Please upgrade your plan for more.");
       return;
@@ -137,7 +140,7 @@ const Home: React.FC = () => {
       }
 
       // Then generate LUT
-      const processed = await processImages(originalImage, referenceImage);
+      const { processedImage: processed } = await processImages(originalImage, referenceImage);
       setProcessedImage(processed);
       
       // Update credits state after successful processing
@@ -194,7 +197,7 @@ const Home: React.FC = () => {
             }`}
             disabled={!originalImage || !referenceImage || isProcessing}
           >
-            Generate LUT
+            {isProcessing ? 'Generating...' : 'Generate LUT'}
           </motion.button>
           {credits !== null && (
             <p className="text-sm text-gray-400">
@@ -206,13 +209,15 @@ const Home: React.FC = () => {
         </div>
 
         {processedImage && (
-          <div className="flex flex-col items-center gap-4">
-            <img
-              src={processedImage}
-              alt="Processed"
-              className="max-w-full rounded-lg shadow-lg"
+          <>
+            <ImagePreview
+              originalImage={originalImage!}
+              referenceImage={referenceImage!}
+              processedImage={processedImage}
+              isProcessing={isProcessing}
             />
-          </div>
+            <DownloadOptions onDownload={downloadLUT} />
+          </>
         )}
 
         {error && (
@@ -221,7 +226,10 @@ const Home: React.FC = () => {
 
         <AnimatePresence>
           {showPopup && <Popup onClose={() => setShowPopup(false)} />}
+          {isProcessing && <LoadingSpinner />}
         </AnimatePresence>
+
+        <CompanySlider />
       </main>
     </div>
   );

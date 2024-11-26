@@ -1,56 +1,21 @@
 "use client"
-import React, { useState, useCallback, useRef } from 'react';
-import { motion } from 'framer-motion';
-import useMeasure from 'react-use-measure';
+import React, { useState, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import ImageComparison from './ImageComparison';
 
 interface ImagePreviewProps {
   originalImage: string;
   referenceImage: string;
   processedImage: string;
+  isProcessing?: boolean;
 }
 
 const ImagePreview: React.FC<ImagePreviewProps> = ({
   originalImage,
   referenceImage,
   processedImage,
+  isProcessing = false,
 }) => {
-  const [ref, bounds] = useMeasure();
-  const [sliderPosition, setSliderPosition] = useState(50);
-  const [isDragging, setIsDragging] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const updateSliderPosition = useCallback((clientX: number) => {
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const position = ((clientX - rect.left) / rect.width) * 100;
-    setSliderPosition(Math.min(Math.max(position, 0), 100));
-  }, []);
-
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    setIsDragging(true);
-    updateSliderPosition(e.clientX);
-  }, [updateSliderPosition]);
-
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!isDragging) return;
-    updateSliderPosition(e.clientX);
-  }, [isDragging, updateSliderPosition]);
-
-  const handleMouseUp = useCallback(() => {
-    setIsDragging(false);
-  }, []);
-
-  React.useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mouseup', handleMouseUp);
-      document.addEventListener('mouseleave', handleMouseUp);
-    }
-    return () => {
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.removeEventListener('mouseleave', handleMouseUp);
-    };
-  }, [isDragging, handleMouseUp]);
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -61,63 +26,48 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
       <div className="grid md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <h3 className="text-gray-200 font-medium">Reference Style</h3>
-          <div className="relative h-64 rounded-lg overflow-hidden bg-dark-900">
+          <div className="relative aspect-square rounded-lg overflow-hidden bg-dark-900">
+            <AnimatePresence>
+              {isProcessing && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 flex items-center justify-center bg-black/50 z-10"
+                >
+                  <div className="loading-spinner" />
+                </motion.div>
+              )}
+            </AnimatePresence>
             <img
               src={referenceImage}
               alt="Reference"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
             />
           </div>
         </div>
 
         <div className="space-y-2">
-          <h3 className="text-gray-200 font-medium">Before / After Comparison</h3>
-          <div
-            ref={containerRef}
-            className="relative h-64 rounded-lg overflow-hidden cursor-col-resize bg-dark-900"
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-          >
-            {/* Processed Image (After) */}
-            <img
-              src={processedImage}
-              alt="Processed"
-              className="absolute inset-0 w-full h-full object-cover"
+          <h3 className="text-gray-200 font-medium">Before / After</h3>
+          <div className="relative aspect-square rounded-lg overflow-hidden bg-dark-900">
+            <AnimatePresence>
+              {isProcessing && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 flex items-center justify-center bg-black/50 z-10"
+                >
+                  <div className="loading-spinner" />
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <ImageComparison
+              beforeImage={originalImage}
+              afterImage={processedImage}
+              className="w-full h-full"
             />
-
-            {/* Original Image (Before) with clip mask */}
-            <div
-              className="absolute inset-0"
-              style={{ width: `${sliderPosition}%`, overflow: 'hidden' }}
-            >
-              <img
-                src={originalImage}
-                alt="Original"
-                className="absolute inset-0 w-full h-full object-cover"
-                style={{ width: `${100 / (sliderPosition / 100)}%` }}
-              />
-            </div>
-
-            {/* Slider */}
-            <div
-              className="image-compare-slider"
-              style={{ left: `${sliderPosition}%` }}
-            >
-              <div className="image-compare-handle top" />
-              <div className="image-compare-handle bottom" />
-            </div>
-
-            {/* Labels */}
-            <div className="absolute top-2 left-2 bg-black/75 text-white text-sm px-2 py-1 rounded">
-              Before
-            </div>
-            <div className="absolute top-2 right-2 bg-black/75 text-white text-sm px-2 py-1 rounded">
-              After
-            </div>
           </div>
-          <p className="text-sm text-gray-400 text-center">
-            Drag slider to compare original and processed images
-          </p>
         </div>
       </div>
     </motion.div>

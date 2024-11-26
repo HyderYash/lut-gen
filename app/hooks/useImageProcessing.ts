@@ -14,7 +14,7 @@ export function useImageProcessing() {
   const processImages = useCallback(async (
     originalImage: string,
     referenceImage: string
-  ): Promise<string> => {
+  ): Promise<{ processedImage: string; lutData: LUTData }> => {
     // Load images
     const [originalImg, referenceImg] = await Promise.all([
       loadImage(originalImage),
@@ -38,25 +38,35 @@ export function useImageProcessing() {
     const processedImageData = applyColorTransfer(originalImageData, refStats);
     
     // Convert processed image data back to base64
-    return imageDataToBase64(processedImageData);
+    return {
+      processedImage: imageDataToBase64(processedImageData),
+      lutData: lut
+    };
   }, []);
 
   const downloadLUT = useCallback(async () => {
-    if (!lutData) return;
-    
-    const zipBlob = await createLUTZipFile(lutData);
-    const url = URL.createObjectURL(zipBlob);
-    
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'custom-lut.zip';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    if (!lutData) {
+      console.error('No LUT data available');
+      return;
+    }
+
+    try {
+      const zipBlob = await createLUTZipFile(lutData);
+      const url = URL.createObjectURL(zipBlob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'custom-lut-pack.zip';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error creating LUT zip file:', error);
+    }
   }, [lutData]);
 
-  return { processImages, downloadLUT };
+  return { processImages, downloadLUT, lutData };
 }
 
 // Helper functions

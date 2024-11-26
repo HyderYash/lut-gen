@@ -14,25 +14,49 @@
   }
 }
 
+/* Image Comparison Slider */
 .image-compare-slider {
-  @apply absolute top-0 left-0 w-1 h-full bg-white shadow-lg cursor-col-resize;
-  transform: translateX(-50%);
+  position: absolute;
+  width: 2px;
+  height: 100%;
+  background: white;
+  cursor: col-resize;
+  z-index: 20;
 }
 
 .image-compare-handle {
-  @apply absolute left-1/2 w-8 h-8 bg-white rounded-full -translate-x-1/2 shadow-lg 
-         flex items-center justify-center border-2 border-gray-200;
-}
-
-.image-compare-handle::after {
-  content: '';
-  @apply w-4 h-0.5 bg-gray-400 rounded-full;
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  background: white;
+  border-radius: 50%;
+  left: -15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  cursor: col-resize;
 }
 
 .image-compare-handle.top {
-  @apply -top-4;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .image-compare-handle.bottom {
-  @apply -bottom-4;
+  bottom: 50%;
+  transform: translateY(50%);
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
