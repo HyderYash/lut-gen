@@ -1,58 +1,45 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { cookies } from 'next/headers';
 
 // Segment config
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-export const fetchCache = 'force-no-store';
+export const revalidate = 0;
 
 export async function GET() {
   try {
-    const cookieStore = cookies();
-    const sessionToken = cookieStore.get('next-auth.session-token');
-
     const session = await auth();
+    
     if (!session?.user?.email) {
-      return new Response(JSON.stringify({ credits: 0, error: "No valid session" }), {
-        status: 401,
-        headers: { 'content-type': 'application/json' }
-      });
+      return NextResponse.json({ credits: 0 }, { status: 200 });
     }
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
-      select: { 
-        credits: true, 
-        plan: true,
-        email: true
-      },
+      select: { credits: true, plan: true }
     });
 
     if (!user) {
-      return new Response(JSON.stringify({ credits: 0, error: "User not found" }), {
-        status: 404,
-        headers: { 'content-type': 'application/json' }
-      });
+      return NextResponse.json({ credits: 0 }, { status: 200 });
     }
 
     const hasUnlimitedCredits = user.credits === -1 || user.plan?.toLowerCase() === "premium";
     const finalCredits = hasUnlimitedCredits ? -1 : user.credits;
 
-    return new Response(JSON.stringify({
+    return NextResponse.json({ 
       credits: finalCredits,
-      plan: user.plan,
-      timestamp: new Date().toISOString()
-    }), {
+      plan: user.plan 
+    }, { 
       status: 200,
-      headers: { 'content-type': 'application/json' }
+      headers: {
+        'Cache-Control': 'no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      }
     });
 
   } catch (error) {
     console.error("[Vercel] Error in get-user-credits:", error);
-    return new Response(JSON.stringify({ credits: 0, error: "Server error" }), {
-      status: 500,
-      headers: { 'content-type': 'application/json' }
-    });
+    return NextResponse.json({ credits: 0 }, { status: 200 });
   }
 }
