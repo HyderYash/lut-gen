@@ -5,7 +5,7 @@ import ImageUpload from "./components/ImageUpload";
 import { useImageProcessing } from "./hooks/useImageProcessing";
 import Link from "next/link";
 import { useSession } from "next-auth/react"
-import Navbar from "./components/Navbar";
+import Navbar from "../components/Navbar";
 import ImagePreview from "./components/ImagePreview";
 import DownloadOptions from "./components/DownloadOptions";
 import LoadingSpinner from "./components/LoadingSpinner";
@@ -71,7 +71,7 @@ const Popup: React.FC<{ onClose: () => void }> = ({ onClose }) => (
           Close
         </button>
         <Link
-          href="/api/auth/login"
+          href="/auth/signin"
           className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-6 rounded-lg transition"
         >
           Log In

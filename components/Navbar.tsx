@@ -1,90 +1,114 @@
 "use client"
 
-import { signOut, useSession } from "next-auth/react"
+import React, { useState } from "react"
+import { Info, LogOut, User, DollarSign, Link2, SquareUserRound } from "lucide-react"
+import { motion } from "framer-motion"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { signOut, useSession } from "next-auth/react"
 
-export default function Navbar() {
+interface NavbarProps {
+  setShowTutorial: (show: boolean) => void
+  setShowAffiliate?: (show: boolean) => void
+}
+
+const Navbar = ({ setShowTutorial, setShowAffiliate }: NavbarProps) => {
+  const [menuOpen, setMenuOpen] = useState<boolean>(false)
   const { data: session } = useSession()
-  const pathname = usePathname()
 
   return (
-    <nav className="bg-white shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex">
-            <div className="flex-shrink-0 flex items-center">
-              <Link href="/" className="text-xl font-bold text-indigo-600">
-                LUT Generator Pro
-              </Link>
-            </div>
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              <Link
-                href="/"
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  pathname === "/"
-                    ? "border-indigo-500 text-gray-900"
-                    : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                }`}
+    <nav className="bg-black/20 backdrop-blur-sm text-white sticky top-0 z-50 shadow-xl border-b border-white/10">
+      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+        <motion.h1
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="text-2xl font-bold flex items-center gap-2"
+        >
+          <Link href="/">LUT Builder</Link>
+        </motion.h1>
+
+        <div className="flex items-center gap-4">
+          <motion.button
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+            onClick={() => setShowTutorial(true)}
+          >
+            <Info size={20} />
+            How it works
+          </motion.button>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors cursor-pointer"
+          >
+            <DollarSign size={20} />
+            <Link href="/pricing">Pricing</Link>
+          </motion.div>
+          {session && (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors cursor-pointer"
+            >
+              <Link2 size={20} />
+              <Link href="/affiliate">Affiliate</Link>
+            </motion.div>
+          )}
+          {session ? (
+            <div className="relative">
+              <motion.button
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+                onClick={() => setMenuOpen((prev) => !prev)}
               >
-                Home
-              </Link>
-              {session?.user && (
-                <>
-                  <Link
-                    href="/dashboard"
-                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                      pathname === "/dashboard"
-                        ? "border-indigo-500 text-gray-900"
-                        : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                    }`}
+                {session.user?.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={session.user.image}
+                    alt={session.user.name || "User"}
+                    className="w-8 h-8 rounded-full"
+                  />
+                ) : (
+                  <User className="w-8 h-8 text-white border border-white/20 rounded-full p-1" />
+                )}
+              </motion.button>
+              {menuOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white text-black rounded-md shadow-lg border border-gray-200">
+                  <button
+                    onClick={() => signOut()}
+                    className="flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-gray-100 transition"
                   >
-                    Dashboard
-                  </Link>
-                  <Link
-                    href="/affiliate"
-                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                      pathname === "/affiliate"
-                        ? "border-indigo-500 text-gray-900"
-                        : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                    }`}
-                  >
-                    Affiliate
-                  </Link>
-                </>
+                    <LogOut className="w-5 h-5 text-gray-600" />
+                    <span>Logout</span>
+                  </button>
+                </div>
               )}
             </div>
-          </div>
-          <div className="hidden sm:ml-6 sm:flex sm:items-center">
-            {session?.user ? (
-              <div className="flex items-center space-x-4">
-                <span className="text-gray-700">{session.user.email}</span>
-                <button
-                  onClick={() => signOut()}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  Sign Out
-                </button>
-              </div>
-            ) : (
-              <div className="space-x-4">
-                <Link
-                  href="/auth/signin"
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-600 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/auth/signup"
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  Sign Up
-                </Link>
-              </div>
-            )}
-          </div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+            >
+              <SquareUserRound size={20} />
+              <Link href="/auth/signin">Get Started</Link>
+            </motion.div>
+          )}
         </div>
       </div>
     </nav>
   )
 }
+
+export default Navbar

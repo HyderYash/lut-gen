@@ -90,6 +90,12 @@ export const config: NextAuthConfig = {
       return session
     },
     async redirect({ url, baseUrl }) {
+      // If it's a sign-in attempt and not a new user, redirect to home
+      if (url.includes("/auth/referral") && !url.includes("isSignUp=true")) {
+        return baseUrl
+      }
+      
+      // For all other cases, follow standard redirect rules
       if (url.startsWith(baseUrl)) return url
       if (url.startsWith("/")) return `${baseUrl}${url}`
       return baseUrl

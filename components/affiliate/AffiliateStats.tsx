@@ -1,114 +1,90 @@
-'use client';
+"use client"
 
-import { useEffect, useState } from 'react';
-
-interface AffiliateStats {
-  totalReferrals: number;
-  activeReferrals: number;
-  totalEarnings: number;
-  currentTier: number;
-  monthlyReferrals: number;
-  monthlyEarnings: number;
-  nextTierThreshold: number | null;
-  referralsToNextTier: number;
-  reachedMilestone: boolean;
-}
+import { motion } from "framer-motion"
+import { useState } from "react"
+import { toast } from "sonner"
+import { useSession } from "next-auth/react"
 
 export function AffiliateStats() {
-  const [stats, setStats] = useState<AffiliateStats | null>(null);
-  const [referralCode, setReferralCode] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: session } = useSession()
+  const [copied, setCopied] = useState(false)
+  const referralCode = session?.user?.referralCode || ""
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await fetch('/api/affiliate/stats');
-        const data = await response.json();
-        setStats(data.stats);
-        setReferralCode(data.referralCode);
-      } catch (error) {
-        console.error('Error fetching affiliate stats:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStats();
-  }, []);
-
-  if (loading) {
-    return <div className="text-center py-4">Loading...</div>;
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(referralCode)
+    setCopied(true)
+    toast.success("Referral code copied!")
+    setTimeout(() => setCopied(false), 2000)
   }
-
-  if (!stats) {
-    return <div className="text-center py-4 text-red-500">Error loading affiliate stats</div>;
-  }
-
-  const progressToNextTier = stats.nextTierThreshold
-    ? ((stats.totalReferrals / stats.nextTierThreshold) * 100)
-    : 100;
 
   return (
-    <div className="max-w-7xl mx-auto p-4">
-      <h2 className="text-2xl font-bold mb-6">Affiliate Dashboard</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Total Referrals Card */}
-        <div className="border-2 border-solid rounded-lg shadow p-6">
-          <div className="text-sm font-medium text-gray-500 mb-2">Total Referrals</div>
-          <div className="text-3xl font-bold mb-2">{stats.totalReferrals}</div>
-          <p className="text-sm text-gray-500">
-            {stats.activeReferrals} active subscribers
-          </p>
-        </div>
-
-        {/* Commission Tier Card */}
-        <div className="border-2 rounded-lg shadow p-6">
-          <div className="text-sm font-medium text-gray-500 mb-2">Commission Tier</div>
-          <div className="text-3xl font-bold mb-2">{stats.currentTier}%</div>
-          {stats.nextTierThreshold && (
-            <div className="mt-2">
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div
-                  className="bg-blue-600 h-2.5 rounded-full"
-                  style={{ width: `${progressToNextTier}%` }}
-                ></div>
+    <div className="container mx-auto px-4 max-w-7xl">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="relative group"
+      >
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-purple-600 rounded-2xl blur opacity-30 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt"></div>
+        <div className="relative px-8 py-7 bg-[#0A0A0A] rounded-2xl">
+          <div className="flex flex-col gap-6">
+            {/* Title Section */}
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary to-purple-600 rounded-xl blur opacity-30"></div>
+                <div className="relative bg-[#1A1A1A] text-primary w-14 h-14 rounded-xl flex items-center justify-center">
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                </div>
               </div>
-              <p className="text-sm text-gray-500 mt-2">
-                {stats.referralsToNextTier} referrals to {stats.nextTierThreshold} for next tier
-              </p>
+              <div>
+                <div className="text-2xl font-bold bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent mb-1">
+                  Your Referral Code
+                </div>
+                <div className="text-gray-400">Share this code to start earning commissions</div>
+              </div>
             </div>
-          )}
-        </div>
 
-        {/* Total Earnings Card */}
-        <div className="border-2  rounded-lg shadow p-6">
-          <div className="text-sm font-medium text-gray-500 mb-2">Total Earnings</div>
-          <div className="text-3xl font-bold mb-2">
-            ${stats.totalEarnings.toFixed(2)}
+            {/* Code Display Section */}
+            <div className="relative p-6 bg-[#0D0D0D] rounded-xl group/code">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/50 to-purple-600/50 rounded-xl opacity-0 group-hover/code:opacity-100 transition duration-500 blur"></div>
+              <div className="relative">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-grow">
+                    <div className="font-mono text-2xl text-gray-300 tracking-wide">
+                      {referralCode}
+                    </div>
+                  </div>
+                  <button
+                    onClick={copyToClipboard}
+                    className="relative group/button flex-shrink-0"
+                  >
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-purple-600 rounded-xl blur opacity-75 group-hover/button:opacity-100 transition duration-500"></div>
+                    <div className="relative px-6 py-3 bg-[#0A0A0A] rounded-xl text-white flex items-center gap-2 group-hover/button:bg-[#0D0D0D] transition-colors">
+                      {copied ? (
+                        <>
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span className="font-medium">Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                          </svg>
+                          <span className="font-medium">Copy Code</span>
+                        </>
+                      )}
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-          <p className="text-sm text-gray-500">
-            ${stats.monthlyEarnings.toFixed(2)} this month
-          </p>
         </div>
-      </div>
-
-      {/* Referral Code Section */}
-      {referralCode && (
-        <div className="mt-6 border-2  rounded-lg shadow p-6">
-          <div className="text-sm font-medium text-gray-500 mb-4">Your Referral Code</div>
-          <div className="flex items-center gap-4">
-            <code className="border-2  px-3 py-2 rounded font-mono text-sm">
-              {referralCode}
-            </code>
-            <button
-              className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
-              onClick={() => navigator.clipboard.writeText(referralCode)}
-            >
-              Copy to clipboard
-            </button>
-          </div>
-        </div>
-      )}
+      </motion.div>
     </div>
-  );
+  )
 }
