@@ -1,70 +1,91 @@
-import type { Config } from "tailwindcss";
-import plugin from 'tailwindcss/plugin'
+import type { Config } from "tailwindcss"
 
 const config: Config = {
+  darkMode: ["class"],
   content: [
-    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
   ],
   theme: {
-    extend: {
-      fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
       },
+    },
+    extend: {
       colors: {
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: '#B89272',
-          dark: '#a17b5d',
-          light: '#d4b79c',
+          DEFAULT: "#10B981", // Emerald 500
+          foreground: "hsl(var(--primary-foreground))",
+          hover: "#059669", // Emerald 600
+          glow: "#34D399", // Emerald 400
         },
-        dark: {
-          50: '#f7f7f7',
-          100: '#e3e3e3',
-          200: '#c8c8c8',
-          300: '#a4a4a4',
-          400: '#818181',
-          500: '#666666',
-          600: '#515151',
-          700: '#434343',
-          800: '#383838',
-          900: '#1a1a1a',
-          950: '#0d0d0d',
+        secondary: {
+          DEFAULT: "#0D9488", // Teal 600
+          foreground: "hsl(var(--secondary-foreground))",
+          hover: "#0F766E", // Teal 700
+          glow: "#2DD4BF", // Teal 400
         },
+        accent: {
+          DEFAULT: "#4ADE80", // Neon Green
+          foreground: "hsl(var(--accent-foreground))",
+          hover: "#22C55E",
+          glow: "#86EFAC",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
+      boxShadow: {
+        'neon-glow': '0 0 15px rgba(16, 185, 129, 0.5), 0 0 30px rgba(16, 185, 129, 0.3)',
+        'neon-hover': '0 0 25px rgba(16, 185, 129, 0.6), 0 0 45px rgba(16, 185, 129, 0.4)',
+        'accent-glow': '0 0 15px rgba(74, 222, 128, 0.5), 0 0 30px rgba(74, 222, 128, 0.3)',
+        'accent-hover': '0 0 25px rgba(74, 222, 128, 0.6), 0 0 45px rgba(74, 222, 128, 0.4)',
       },
       keyframes: {
-        'scroll-left': {
-          '0%': { transform: 'translateX(0)' },
-          '100%': { transform: 'translateX(calc(-100% - 3rem))' }
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
-        'scroll-right': {
-          '0%': { transform: 'translateX(-50%)' },
-          '100%': { transform: 'translateX(0)' }
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
         },
-        'line-scroll': {
-          '0%': { transform: 'translateX(-100%)' },
-          '100%': { transform: 'translateX(100%)' }
-        }
       },
       animation: {
-        'scroll-left': 'scroll-left 25s linear infinite',
-        'scroll-right': 'scroll-right 25s linear infinite',
-        'line-scroll': 'line-scroll 3s ease-in-out infinite'
-      }
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+      },
     },
   },
-  plugins: [
-    plugin(function ({ addUtilities }) {
-      addUtilities({
-        '.scrollbar-hide::-webkit-scrollbar': {
-          'display': 'none'
-        },
-        '.scrollbar-hide': {
-          '-ms-overflow-style': 'none',
-          'scrollbar-width': 'none'
-        }
-      })
-    })
-  ],
-};
-export default config;
+  plugins: [require("tailwindcss-animate")],
+} satisfies Config
+
+export default config

@@ -22,6 +22,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [hoveredPreset, setHoveredPreset] = useState<string | null>(null);
   const sliderRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -50,15 +52,32 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     }
   }, [onImageSelect]);
 
+  const checkScrollButtons = useCallback(() => {
+    if (sliderRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = sliderRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 5);
+    }
+  }, []);
+
   const scrollSlider = (direction: 'left' | 'right') => {
     if (sliderRef.current) {
-      const scrollAmount = direction === 'left' ? -200 : 200;
+      const scrollAmount = direction === 'left' ? -300 : 300;
       sliderRef.current.scrollBy({
         left: scrollAmount,
         behavior: 'smooth'
       });
     }
   };
+
+  React.useEffect(() => {
+    const slider = sliderRef.current;
+    if (slider) {
+      slider.addEventListener('scroll', checkScrollButtons);
+      checkScrollButtons();
+      return () => slider.removeEventListener('scroll', checkScrollButtons);
+    }
+  }, [checkScrollButtons]);
 
   // Shuffle presets array
   const shuffledPresets = React.useMemo(() => {
@@ -91,63 +110,84 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
-                className="relative"
+                className="relative mb-6"
               >
-                {/* Scroll Left Button */}
-                <button
-                  onClick={() => scrollSlider('left')}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-black/50 rounded-full p-1 hover:bg-black/70 transition"
-                >
-                  <ChevronLeft className="text-white" size={24} />
-                </button>
+                {/* Navigation Buttons Container */}
+                <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between pointer-events-none z-10">
+                  {/* Left Button */}
+                  <AnimatePresence>
+                    {canScrollLeft && (
+                      <motion.button
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => scrollSlider('left')}
+                        className="pointer-events-auto ml-2 bg-black/50 rounded-full p-2 hover:bg-black/70 transition-all hover:scale-110 backdrop-blur-sm"
+                      >
+                        <ChevronLeft className="text-white w-5 h-5" />
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Right Button */}
+                  <AnimatePresence>
+                    {canScrollRight && (
+                      <motion.button
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => scrollSlider('right')}
+                        className="pointer-events-auto mr-2 bg-black/50 rounded-full p-2 hover:bg-black/70 transition-all hover:scale-110 backdrop-blur-sm"
+                      >
+                        <ChevronRight className="text-white w-5 h-5" />
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
+                </div>
 
                 {/* Preset Images Slider */}
                 <div
                   ref={sliderRef}
-                  className="flex overflow-x-scroll scrollbar-hide space-x-4 pb-4 px-10"
+                  className="hide-scrollbar relative flex gap-4 overflow-x-auto max-w-full px-2 py-2 -mx-2"
                   style={{
                     scrollSnapType: 'x mandatory',
-                    WebkitOverflowScrolling: 'touch'
+                    WebkitOverflowScrolling: 'touch',
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none'
                   }}
                 >
-                  {shuffledPresets.map((preset) => (
-                    <motion.div
-                      key={preset.id}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => onImageSelect(preset.src)}
-                      onMouseEnter={() => setHoveredPreset(preset.id)}
-                      onMouseLeave={() => setHoveredPreset(null)}
-                      className="flex-shrink-0 w-48 h-32 cursor-pointer rounded-lg overflow-hidden shadow-lg scroll-snap-align-center relative"
-                      style={{ scrollSnapAlign: 'center' }}
-                    >
-                      <img
-                        src={preset.src}
-                        alt={preset.alt}
-                        className="w-full h-full object-cover"
-                      />
-                      {hoveredPreset === preset.id && (
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="absolute inset-0 bg-black/50 flex items-center justify-center p-2"
-                        >
-                          <p className="text-white text-sm font-medium text-center">
-                            {preset.alt}
-                          </p>
-                        </motion.div>
-                      )}
-                    </motion.div>
-                  ))}
+                  <div className="flex gap-4 min-w-max">
+                    {shuffledPresets.map((preset) => (
+                      <motion.div
+                        key={preset.id}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => onImageSelect(preset.src)}
+                        onMouseEnter={() => setHoveredPreset(preset.id)}
+                        onMouseLeave={() => setHoveredPreset(null)}
+                        className="relative flex-shrink-0 w-48 h-32 rounded-lg overflow-hidden shadow-lg cursor-pointer"
+                        style={{ scrollSnapAlign: 'center' }}
+                      >
+                        <img
+                          src={preset.src}
+                          alt={preset.alt}
+                          className="w-full h-full object-cover"
+                        />
+                        {hoveredPreset === preset.id && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="absolute inset-0 bg-black/50 flex items-center justify-center p-2"
+                          >
+                            <p className="text-white text-sm font-medium text-center">
+                              {preset.alt}
+                            </p>
+                          </motion.div>
+                        )}
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
-
-                {/* Scroll Right Button */}
-                <button
-                  onClick={() => scrollSlider('right')}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-black/50 rounded-full p-1 hover:bg-black/70 transition"
-                >
-                  <ChevronRight className="text-white" size={24} />
-                </button>
               </motion.div>
             )}
 
@@ -202,9 +242,9 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={onImageRemove}
-              className="absolute top-2 right-2 bg-black/75 text-white p-2 rounded-full hover:bg-black transition-colors"
+              className="absolute top-4 right-4 bg-black/50 rounded-full p-2 hover:bg-black/70 transition-colors"
             >
-              <X size={20} />
+              <X className="text-white" size={20} />
             </motion.button>
           </motion.div>
         )}

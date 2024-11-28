@@ -1,15 +1,24 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ImageUpload from "./components/ImageUpload";
 import { useImageProcessing } from "./hooks/useImageProcessing";
 import Link from "next/link";
-import { useSession } from "next-auth/react"
+import { useSession } from "next-auth/react";
 import Navbar from "../components/Navbar";
 import ImagePreview from "./components/ImagePreview";
 import DownloadOptions from "./components/DownloadOptions";
 import LoadingSpinner from "./components/LoadingSpinner";
 import CompanySlider from "./components/CompanySlider";
+import Title from "../components/Title";
+import FeatureBox from "../components/FeatureBox";
+import TrustedBy from "../components/TrustedBy";
+import FAQ from "../components/FAQ";
+import Reviews from "../components/Reviews";
+import Footer from "../components/Footer";
+import PricingCards from "../components/PricingCards";
+import { Palette, Zap, Eye } from "lucide-react";
 
 const referencePresets = [
   { id: 'tokyo-twilight', src: '/reference-images/Tokyo Twilight.jpg', alt: 'Tokyo Twilight' },
@@ -44,44 +53,7 @@ const referencePresets = [
   { id: 'water-diviner', src: '/reference-images/The water Diviner.jpg', alt: 'The Water Diviner' }
 ];
 
-const Popup: React.FC<{ onClose: () => void }> = ({ onClose }) => (
-  <motion.div
-    className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
-  >
-    <div className="bg-white rounded-lg p-8 shadow-2xl w-96 text-center relative">
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-        aria-label="Close"
-      >
-        ✕
-      </button>
-      <h2 className="text-xl font-bold text-gray-800 mb-4">Login Required</h2>
-      <p className="text-sm text-gray-600 mb-8">
-        You need to log in to access this feature. Please log in or close this popup to return.
-      </p>
-      <div className="flex justify-center gap-4">
-        <button
-          onClick={onClose}
-          className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg transition"
-        >
-          Close
-        </button>
-        <Link
-          href="/auth/signin"
-          className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-6 rounded-lg transition"
-        >
-          Log In
-        </Link>
-      </div>
-    </div>
-  </motion.div>
-);
-
-const Home: React.FC = () => {
+const Home = () => {
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [referenceImage, setReferenceImage] = useState<string | null>(null);
   const [processedImage, setProcessedImage] = useState<string | null>(null);
@@ -111,65 +83,44 @@ const Home: React.FC = () => {
     };
 
     fetchCredits();
-
-    const intervalId = setInterval(fetchCredits, 30000); // Refresh every 30 seconds
-
+    const intervalId = setInterval(fetchCredits, 30000);
     return () => clearInterval(intervalId);
   }, [session]);
 
   const handleProcess = async () => {
     if (!originalImage || !referenceImage) return;
-    
-    if (credits === null || (credits !== -1 && credits <= 0)) {
-      setError("You have reached the maximum limit of LUTs. Please upgrade your plan for more.");
-      return;
-    }
 
-    setError(null);
     setIsProcessing(true);
+    setError(null);
 
     try {
-      // First decrease credits
-      const creditResponse = await fetch("/api/decrease-credits", {
-        method: "POST",
-      });
-      const creditData = await creditResponse.json();
-      
-      if (!creditResponse.ok) {
-        throw new Error(creditData.error || "Failed to process credits");
+      const result = await processImages(originalImage, referenceImage);
+      if (result.success) {
+        setProcessedImage(result.processedImage);
+      } else {
+        setError(result.error || 'An error occurred during processing');
       }
-
-      // Then generate LUT
-      const { processedImage: processed } = await processImages(originalImage, referenceImage);
-      setProcessedImage(processed);
-      
-      // Update credits state after successful processing
-      setCredits(creditData.credits);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to process images. Please try again.");
-      
-      // If error occurred after decreasing credits, try to restore them
-      if (credits !== -1 && credits > 0) {
-        try {
-          const response = await fetch("/api/get-user-credits");
-          const data = await response.json();
-          setCredits(data.credits);
-        } catch (error) {
-          console.error("Error restoring credits:", error);
-        }
-      }
+    } catch (error) {
+      setError('An unexpected error occurred');
+      console.error('Processing error:', error);
     } finally {
       setIsProcessing(false);
     }
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-black text-white">
       <Navbar setShowTutorial={setShowTutorial} setShowAffiliate={setShowAffiliate} />
+      
+      <main className="container mx-auto px-4 py-8">
+        <div className="flex flex-col items-center justify-center mb-12">
+          <Title />
+          <p className="text-gray-400 mt-2 text-center">
+            Create professional color grading LUTs with AI-powered precision
+          </p>
+        </div>
 
-      <main className="container mx-auto px-4 py-8 space-y-8">
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <ImageUpload
             title="Original Image"
             image={originalImage}
@@ -224,13 +175,64 @@ const Home: React.FC = () => {
           <div className="text-red-500 text-center">{error}</div>
         )}
 
-        <AnimatePresence>
-          {showPopup && <Popup onClose={() => setShowPopup(false)} />}
-          {isProcessing && <LoadingSpinner />}
-        </AnimatePresence>
-
         <CompanySlider />
+
+        {/* Feature Boxes */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 mb-16">
+          <FeatureBox
+            icon={Palette}
+            title="AI-Powered Color Match"
+            description="Advanced algorithms that perfectly match your reference images"
+          />
+          <FeatureBox
+            icon={Zap}
+            title="Professional LUTs"
+            description="Export industry-standard LUTs compatible with major editing software"
+          />
+          <FeatureBox
+            icon={Eye}
+            title="Real-time Preview"
+            description="See changes instantly with our real-time preview system"
+          />
+        </div>
+
+        {/* Pricing Section */}
+        <PricingCards />
+
+        {/* Reviews Section */}
+        <Reviews />
+
+        {/* FAQ Section */}
+        <FAQ />
       </main>
+
+      <Footer />
+
+      {showTutorial && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          {/* Tutorial content */}
+        </div>
+      )}
+
+      {showAffilate && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          {/* Affiliate content */}
+        </div>
+      )}
+
+      {isProcessing && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <LoadingSpinner />
+        </div>
+      )}
+
+      {error && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-red-500 text-white p-4 rounded-lg">
+            {error}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

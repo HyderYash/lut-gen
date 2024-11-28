@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { motion, AnimatePresence } from "framer-motion";
 
 const companies = [
   {
@@ -39,11 +40,20 @@ const companies = [
 
 const CompanySlider = () => {
   return (
-    <div className="w-full py-12 mt-8">
+    <div className="w-full py-12 mt-12">
       <div className="max-w-7xl mx-auto">
-        <h3 className="text-center text-lg font-medium text-gray-300 mb-8">
-          <span className="text-primary-light">Trusted</span> by editors worldwide
-        </h3>
+      <div className="w-full py-12 border-b border-white/5">
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center"
+          >
+            <span className="text-lg text-gray-400 tracking-wide font-medium">TRUSTED BY</span>{' '}
+            <span className="text-xl font-bold bg-gradient-to-r from-white via-white to-gray-400 text-transparent bg-clip-text">
+              LEADING BRANDS
+            </span>
+          </motion.h2>
+        </div>
         
         <div className="relative w-full overflow-hidden">
           <style jsx>{`
