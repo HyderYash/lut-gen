@@ -4,6 +4,7 @@ import React, { useState } from "react"
 import { Info, LogOut, User, DollarSign, Link2, SquareUserRound, X } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
+import Image from "next/image"
 import { signOut, useSession } from "next-auth/react"
 
 interface NavbarProps {
@@ -21,8 +22,17 @@ const Navbar = ({ setShowTutorial, setShowAffiliate }: NavbarProps) => {
       <nav className="bg-black/20 backdrop-blur-sm text-white sticky top-0 z-50 shadow-xl border-b border-white/10">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <Link href="/" className="flex items-center gap-2">
-            {/* Logo placeholder - will be added later */}
-            <div className="w-8 h-8"></div>
+            {/* Logo */}
+            <div className="relative">
+              <Image
+                src="/logo.png"
+                alt="LUT Builder AI Logo"
+                width={300}
+                height={300}
+                className="w-auto h-[4rem]"
+                priority
+              />
+            </div>
           </Link>
 
           <div className="flex items-center gap-4">
