@@ -94,14 +94,10 @@ const Home = () => {
     setError(null);
 
     try {
-      const result = await processImages(originalImage, referenceImage);
-      if (result.success) {
-        setProcessedImage(result.processedImage);
-      } else {
-        setError(result.error || 'An error occurred during processing');
-      }
-    } catch (error) {
-      setError('An unexpected error occurred');
+      const { processedImage: newProcessedImage } = await processImages(originalImage, referenceImage);
+      setProcessedImage(newProcessedImage);
+    } catch (error: any) {
+      setError(error?.message || 'An error occurred during processing');
       console.error('Processing error:', error);
     } finally {
       setIsProcessing(false);
