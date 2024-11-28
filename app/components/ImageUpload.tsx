@@ -112,38 +112,35 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                 exit={{ opacity: 0, y: 20 }}
                 className="relative mb-6"
               >
-                {/* Navigation Buttons Container */}
-                <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between pointer-events-none z-10">
-                  {/* Left Button */}
-                  <AnimatePresence>
-                    {canScrollLeft && (
-                      <motion.button
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={() => scrollSlider('left')}
-                        className="pointer-events-auto ml-2 bg-black/50 rounded-full p-2 hover:bg-black/70 transition-all hover:scale-110 backdrop-blur-sm"
-                      >
-                        <ChevronLeft className="text-white w-5 h-5" />
-                      </motion.button>
-                    )}
-                  </AnimatePresence>
+                {/* Left Button */}
+                <AnimatePresence>
+                  {canScrollLeft && (
+                    <motion.button
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      onClick={() => scrollSlider('left')}
+                      className="absolute left-0 top-1/2 -translate-y-1/2 ml-2 bg-black/50 rounded-full p-2 hover:bg-black/70 transition-all hover:scale-110 backdrop-blur-sm z-10"
+                    >
+                      <ChevronLeft className="text-white w-5 h-5" />
+                    </motion.button>
+                  )}
+                </AnimatePresence>
 
-                  {/* Right Button */}
-                  <AnimatePresence>
-                    {canScrollRight && (
-                      <motion.button
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={() => scrollSlider('right')}
-                        className="pointer-events-auto mr-2 bg-black/50 rounded-full p-2 hover:bg-black/70 transition-all hover:scale-110 backdrop-blur-sm"
-                      >
-                        <ChevronRight className="text-white w-5 h-5" />
-                      </motion.button>
-                    )}
-                  </AnimatePresence>
-                </div>
+                {/* Right Button */}
+                <AnimatePresence>
+                  {canScrollRight && (
+                    <motion.button
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      onClick={() => scrollSlider('right')}
+                      className="absolute right-0 top-1/2 -translate-y-1/2 mr-2 bg-black/50 rounded-full p-2 hover:bg-black/70 transition-all hover:scale-110 backdrop-blur-sm z-10"
+                    >
+                      <ChevronRight className="text-white w-5 h-5" />
+                    </motion.button>
+                  )}
+                </AnimatePresence>
 
                 {/* Preset Images Slider */}
                 <div
