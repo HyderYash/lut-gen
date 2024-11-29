@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ImageUpload from "./components/ImageUpload";
 import { useImageProcessing } from "./hooks/useImageProcessing";
-import Link from "next/link";
 import { useSession } from "next-auth/react";
 import Navbar from "../components/Navbar";
 import ImagePreview from "./components/ImagePreview";
@@ -18,7 +17,7 @@ import FAQ from "../components/FAQ";
 import Reviews from "../components/Reviews";
 import Footer from "../components/Footer";
 import PricingCards from "../components/PricingCards";
-import { Palette, Zap, Eye } from "lucide-react";
+import { Palette, Zap, Eye, WandSparkles } from "lucide-react";
 
 const referencePresets = [
   { id: 'tokyo-twilight', src: '/reference-images/Tokyo Twilight.jpg', alt: 'Tokyo Twilight' },
@@ -96,6 +95,17 @@ const Home = () => {
     try {
       const { processedImage: newProcessedImage } = await processImages(originalImage, referenceImage);
       setProcessedImage(newProcessedImage);
+      
+      // Decrease credits after successful processing
+      const response = await fetch('/api/decrease-credits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setCredits(data.credits);
+      }
     } catch (error: any) {
       setError(error?.message || 'An error occurred during processing');
       console.error('Processing error:', error);
@@ -137,13 +147,12 @@ const Home = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => (session ? handleProcess() : setShowPopup(true))}
-            className={`px-8 py-4 rounded-lg font-semibold text-white transition-colors duration-200 ${
-              !originalImage || !referenceImage || isProcessing
-                ? "bg-gray-600/50"
-                : "bg-primary hover:bg-primary-dark"
+            className={`w-full max-w-md px-8 py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2 transition-all duration-300 bg-[#00FF66]/90 hover:bg-[#00FF66] neon-glow ${
+              !originalImage || !referenceImage || isProcessing && "opacity-50 cursor-not-allowed"
             }`}
             disabled={!originalImage || !referenceImage || isProcessing}
           >
+<WandSparkles />
             {isProcessing ? 'Generating...' : 'Generate LUT'}
           </motion.button>
           {credits !== null && (
