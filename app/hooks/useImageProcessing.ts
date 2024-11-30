@@ -3,13 +3,26 @@ import {
   calculateColorStats,
   applyColorTransfer,
   generateLUTData,
+  applyAdjustments
 } from '../utils/colorGrading';
 import { createLUTZipFile } from '../utils/lutExport';
 import { ColorStats, LUTData } from '../types/color';
+import { Adjustments } from '../types/adjustments';
 
 export function useImageProcessing() {
   const [lutData, setLutData] = useState<LUTData | null>(null);
   const [referenceStats, setReferenceStats] = useState<ColorStats | null>(null);
+  const [baseImageData, setBaseImageData] = useState<ImageData | null>(null);
+  const [adjustments, setAdjustments] = useState<Adjustments>({
+    contrast: 0,
+    brightness: 0,
+    saturation: 0,
+    temperature: 0,
+    tint: 0,
+    highlights: 0,
+    shadows: 0,
+    vibrance: 0
+  });
 
   const processImages = useCallback(async (
     originalImage: string,
@@ -36,6 +49,7 @@ export function useImageProcessing() {
 
     // Apply color transfer
     const processedImageData = applyColorTransfer(originalImageData, refStats);
+    setBaseImageData(processedImageData);
     
     // Convert processed image data back to base64
     return {
@@ -44,12 +58,19 @@ export function useImageProcessing() {
     };
   }, []);
 
+  const updateAdjustments = useCallback((newAdjustments: Adjustments): string | null => {
+    if (!baseImageData) return null;
+    
+    setAdjustments(newAdjustments);
+    const adjustedImageData = applyAdjustments(baseImageData, newAdjustments);
+    return imageDataToBase64(adjustedImageData);
+  }, [baseImageData]);
+
   const downloadLUT = useCallback(async () => {
     if (!lutData) {
       console.error('No LUT data available');
       return;
     }
-
     try {
       const zipBlob = await createLUTZipFile(lutData);
       const url = URL.createObjectURL(zipBlob);
@@ -66,7 +87,7 @@ export function useImageProcessing() {
     }
   }, [lutData]);
 
-  return { processImages, downloadLUT, lutData };
+  return { processImages, downloadLUT, lutData, adjustments, updateAdjustments };
 }
 
 // Helper functions

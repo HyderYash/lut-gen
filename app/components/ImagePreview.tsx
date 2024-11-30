@@ -28,21 +28,6 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <h3 className="text-gray-200 font-medium">Reference Style</h3>
-            <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => {
-                  const link = document.createElement('a');
-                  link.href = referenceImage;
-                  link.download = 'reference-style.jpg';
-                  document.body.appendChild(link);
-                  link.click();
-                  document.body.removeChild(link);
-                }}
-                className="text-primary hover:text-primary-light transition-colors"
-              >
-                <Download size={20} />
-              </motion.button>
           </div>
           <div className="relative aspect-square rounded-lg overflow-hidden bg-dark-900">
             <AnimatePresence>
@@ -66,7 +51,26 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
         </div>
 
         <div className="space-y-2">
-          <h3 className="text-gray-200 font-medium">Before / After</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-gray-200 font-medium">Before / After</h3>
+            {processedImage && (
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => {
+                  const link = document.createElement('a');
+                  link.href = processedImage;
+                  link.download = 'processed-image.jpg';
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }}
+                className="text-primary hover:text-primary-light transition-colors"
+              >
+                <Download size={20} />
+              </motion.button>
+            )}
+          </div>
           <div className="relative aspect-square rounded-lg overflow-hidden bg-dark-900">
             <AnimatePresence>
               {isProcessing && (

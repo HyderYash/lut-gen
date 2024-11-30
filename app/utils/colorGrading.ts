@@ -1,5 +1,5 @@
 // Importing types from color.ts
-import { RGB, ColorStats, LUTData } from '../types/color';
+import { RGB, ColorStats, LUTData, Adjustments } from '../types/color';
 
 // Updated functions with TypeScript annotations
 export function getRGBFromImageData(data: Uint8ClampedArray, index: number): RGB {
@@ -135,6 +135,99 @@ export function applyColorTransfer(
   }
 
   return result;
+}
+
+export function applyAdjustments(imageData: ImageData, adjustments: Adjustments): ImageData {
+  const canvas = document.createElement('canvas');
+  canvas.width = imageData.width;
+  canvas.height = imageData.height;
+  const ctx = canvas.getContext('2d')!;
+  ctx.putImageData(imageData, 0, 0);
+
+  // Apply adjustments
+  const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = pixels.data;
+
+  for (let i = 0; i < data.length; i += 4) {
+    let r = data[i];
+    let g = data[i + 1];
+    let b = data[i + 2];
+
+    // Brightness
+    if (adjustments.brightness !== 0) {
+      const factor = 1 + (adjustments.brightness / 100);
+      r *= factor;
+      g *= factor;
+      b *= factor;
+    }
+
+    // Contrast
+    if (adjustments.contrast !== 0) {
+      const factor = (1 + (adjustments.contrast / 100));
+      r = ((r - 128) * factor) + 128;
+      g = ((g - 128) * factor) + 128;
+      b = ((b - 128) * factor) + 128;
+    }
+
+    // Saturation
+    if (adjustments.saturation !== 0) {
+      const gray = 0.2989 * r + 0.5870 * g + 0.1140 * b;
+      const factor = 1 + (adjustments.saturation / 100);
+      r = gray + (r - gray) * factor;
+      g = gray + (g - gray) * factor;
+      b = gray + (b - gray) * factor;
+    }
+
+    // Temperature
+    if (adjustments.temperature !== 0) {
+      const factor = adjustments.temperature / 100;
+      r += factor * 10;
+      b -= factor * 10;
+    }
+
+    // Tint
+    if (adjustments.tint !== 0) {
+      const factor = adjustments.tint / 100;
+      g += factor * 10;
+    }
+
+    // Highlights and Shadows
+    if (adjustments.highlights !== 0 || adjustments.shadows !== 0) {
+      const luminance = (r + g + b) / 3;
+      const shadowsFactor = 1 + (adjustments.shadows / 100);
+      const highlightsFactor = 1 + (adjustments.highlights / 100);
+      
+      if (luminance < 128) {
+        const factor = shadowsFactor;
+        r *= factor;
+        g *= factor;
+        b *= factor;
+      } else {
+        const factor = highlightsFactor;
+        r *= factor;
+        g *= factor;
+        b *= factor;
+      }
+    }
+
+    // Vibrance
+    if (adjustments.vibrance !== 0) {
+      const max = Math.max(r, g, b);
+      const avg = (r + g + b) / 3;
+      const saturation = Math.sqrt((r - avg) ** 2 + (g - avg) ** 2 + (b - avg) ** 2) / 128;
+      const factor = 1 + (adjustments.vibrance / 100) * (1 - saturation);
+      r = avg + (r - avg) * factor;
+      g = avg + (g - avg) * factor;
+      b = avg + (b - avg) * factor;
+    }
+
+    // Clamp values
+    data[i] = Math.min(255, Math.max(0, r));
+    data[i + 1] = Math.min(255, Math.max(0, g));
+    data[i + 2] = Math.min(255, Math.max(0, b));
+  }
+
+  return pixels;
 }
 
 export function generateLUTData(

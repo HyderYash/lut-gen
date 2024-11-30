@@ -7,7 +7,6 @@ import { useImageProcessing } from "./hooks/useImageProcessing";
 import { useSession } from "next-auth/react";
 import Navbar from "../components/Navbar";
 import ImagePreview from "./components/ImagePreview";
-import DownloadOptions from "./components/DownloadOptions";
 import LoadingSpinner from "./components/LoadingSpinner";
 import CompanySlider from "./components/CompanySlider";
 import Title from "../components/Title";
@@ -17,6 +16,8 @@ import FAQ from "../components/FAQ";
 import Reviews from "../components/Reviews";
 import Footer from "../components/Footer";
 import PricingCards from "../components/PricingCards";
+import AdjustmentPanel from "./components/AdjustmentPanel"; // Import AdjustmentPanel
+import ExportPanel from "./components/ExportPanel"; // Import ExportPanel
 import { Palette, Zap, Eye, WandSparkles } from "lucide-react";
 
 const referencePresets = [
@@ -64,7 +65,7 @@ const Home = () => {
   const [showPopup, setShowPopup] = useState<boolean>(false);
 
   const { data: session } = useSession();
-  const { processImages, downloadLUT } = useImageProcessing();
+  const { processImages, downloadLUT, lutData, adjustments, updateAdjustments } = useImageProcessing();
 
   useEffect(() => {
     const fetchCredits = async () => {
@@ -167,12 +168,23 @@ const Home = () => {
         {processedImage && (
           <>
             <ImagePreview
-              originalImage={originalImage!}
-              referenceImage={referenceImage!}
+              originalImage={originalImage}
+              referenceImage={referenceImage}
               processedImage={processedImage}
               isProcessing={isProcessing}
             />
-            <DownloadOptions onDownload={downloadLUT} />
+            <div className="flex gap-6">
+              <AdjustmentPanel
+                adjustments={adjustments}
+                onAdjustmentsChange={(newAdjustments) => {
+                  const updatedImage = updateAdjustments(newAdjustments);
+                  if (updatedImage) {
+                    setProcessedImage(updatedImage);
+                  }
+                }}
+              />
+              <ExportPanel onExport={downloadLUT} />
+            </div>
           </>
         )}
 
