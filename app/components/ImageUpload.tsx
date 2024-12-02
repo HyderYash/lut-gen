@@ -55,27 +55,45 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   const checkScrollButtons = useCallback(() => {
     if (sliderRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = sliderRef.current;
-      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollLeft(scrollLeft > 5); 
       setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 5);
     }
   }, []);
 
-  const scrollSlider = (direction: 'left' | 'right') => {
+  const scrollSlider = useCallback((direction: 'left' | 'right') => {
     if (sliderRef.current) {
-      const scrollAmount = direction === 'left' ? -300 : 300;
+      const scrollAmount = sliderRef.current.clientWidth * (direction === 'left' ? -0.8 : 0.8);
       sliderRef.current.scrollBy({
         left: scrollAmount,
         behavior: 'smooth'
       });
+      
+      // Update buttons after scroll animation
+      setTimeout(checkScrollButtons, 300);
     }
-  };
+  }, [checkScrollButtons]);
 
   React.useEffect(() => {
     const slider = sliderRef.current;
     if (slider) {
-      slider.addEventListener('scroll', checkScrollButtons);
+      // Initial check
       checkScrollButtons();
-      return () => slider.removeEventListener('scroll', checkScrollButtons);
+      
+      // Add scroll event listener
+      const handleScroll = () => {
+        checkScrollButtons();
+        requestAnimationFrame(checkScrollButtons); 
+      };
+      
+      slider.addEventListener('scroll', handleScroll, { passive: true });
+      
+      // Check on window resize too
+      window.addEventListener('resize', checkScrollButtons);
+      
+      return () => {
+        slider.removeEventListener('scroll', handleScroll);
+        window.removeEventListener('resize', checkScrollButtons);
+      };
     }
   }, [checkScrollButtons]);
 
@@ -113,77 +131,80 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                 exit={{ opacity: 0, y: 20 }}
                 className="relative mb-6"
               >
-                {/* Left Button */}
-                <AnimatePresence>
-                  {canScrollLeft && (
-                    <motion.button
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      onClick={() => scrollSlider('left')}
-                      className="absolute left-0 top-1/2 -translate-y-1/2 ml-2 bg-black/50 rounded-full p-2 hover:bg-black/70 transition-all hover:scale-110 backdrop-blur-sm z-10"
-                    >
-                      <ChevronLeft className="text-white w-5 h-5" />
-                    </motion.button>
-                  )}
-                </AnimatePresence>
-
-                {/* Right Button */}
-                <AnimatePresence>
-                  {canScrollRight && (
-                    <motion.button
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      onClick={() => scrollSlider('right')}
-                      className="absolute right-0 top-1/2 -translate-y-1/2 mr-2 bg-black/50 rounded-full p-2 hover:bg-black/70 transition-all hover:scale-110 backdrop-blur-sm z-10"
-                    >
-                      <ChevronRight className="text-white w-5 h-5" />
-                    </motion.button>
-                  )}
-                </AnimatePresence>
-
-                {/* Preset Images Slider */}
-                <div
-                  ref={sliderRef}
-                  className="hide-scrollbar relative flex gap-4 overflow-x-auto max-w-full px-2 py-2 -mx-2"
-                  style={{
-                    scrollSnapType: 'x mandatory',
-                    WebkitOverflowScrolling: 'touch',
-                    scrollbarWidth: 'none',
-                    msOverflowStyle: 'none'
-                  }}
-                >
-                  <div className="flex gap-4 min-w-max">
-                    {shuffledPresets.map((preset) => (
-                      <motion.div
-                        key={preset.id}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => onImageSelect(preset.src)}
-                        onMouseEnter={() => setHoveredPreset(preset.id)}
-                        onMouseLeave={() => setHoveredPreset(null)}
-                        className="relative flex-shrink-0 w-48 h-32 rounded-lg overflow-hidden shadow-lg cursor-pointer"
-                        style={{ scrollSnapAlign: 'center' }}
+                {/* Preset Images Slider Container */}
+                <div className="relative">
+                  {/* Left Button */}
+                  <AnimatePresence>
+                    {canScrollLeft && (
+                      <motion.button
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -10 }}
+                        onClick={() => scrollSlider('left')}
+                        className="absolute left-0 top-[calc(50%-12px)] -translate-y-1/2 -ml-4 bg-black/80 rounded-full hover:bg-black transition-all hover:scale-110 backdrop-blur-sm z-10 shadow-lg grid place-items-center w-8 h-8"
                       >
-                        <img
-                          src={preset.src}
-                          alt={preset.alt}
-                          className="w-full h-full object-cover"
-                        />
-                        {hoveredPreset === preset.id && (
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="absolute inset-0 bg-black/50 flex items-center justify-center p-2"
-                          >
-                            <p className="text-white text-sm font-medium text-center">
-                              {preset.alt}
-                            </p>
-                          </motion.div>
-                        )}
-                      </motion.div>
-                    ))}
+                        <ChevronLeft className="text-white w-5 h-5" strokeWidth={2.5} />
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Right Button */}
+                  <AnimatePresence>
+                    {canScrollRight && (
+                      <motion.button
+                        initial={{ opacity: 0, x: 10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 10 }}
+                        onClick={() => scrollSlider('right')}
+                        className="absolute right-0 top-[calc(50%-12px)] -translate-y-1/2 -mr-4 bg-black/80 rounded-full hover:bg-black transition-all hover:scale-110 backdrop-blur-sm z-10 shadow-lg grid place-items-center w-8 h-8"
+                      >
+                        <ChevronRight className="text-white w-5 h-5" strokeWidth={2.5} />
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Preset Images Slider */}
+                  <div
+                    ref={sliderRef}
+                    className="hide-scrollbar relative flex gap-4 overflow-x-auto max-w-full px-6 py-2 -mx-2"
+                    style={{
+                      scrollSnapType: 'x mandatory',
+                      WebkitOverflowScrolling: 'touch',
+                      scrollbarWidth: 'none',
+                      msOverflowStyle: 'none'
+                    }}
+                  >
+                    <div className="flex gap-4 min-w-max">
+                      {shuffledPresets.map((preset) => (
+                        <motion.div
+                          key={preset.id}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => onImageSelect(preset.src)}
+                          onMouseEnter={() => setHoveredPreset(preset.id)}
+                          onMouseLeave={() => setHoveredPreset(null)}
+                          className="relative flex-shrink-0 w-48 h-32 rounded-lg overflow-hidden shadow-lg cursor-pointer"
+                          style={{ scrollSnapAlign: 'center' }}
+                        >
+                          <img
+                            src={preset.src}
+                            alt={preset.alt}
+                            className="w-full h-full object-cover"
+                          />
+                          {hoveredPreset === preset.id && (
+                            <motion.div
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              className="absolute inset-0 bg-black/50 flex items-center justify-center p-2"
+                            >
+                              <p className="text-white text-sm font-medium text-center">
+                                {preset.alt}
+                              </p>
+                            </motion.div>
+                          )}
+                        </motion.div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </motion.div>
