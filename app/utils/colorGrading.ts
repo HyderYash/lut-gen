@@ -192,23 +192,23 @@ export function applyAdjustments(imageData: ImageData, adjustments: Adjustments)
     }
 
     // Highlights and Shadows
-    if (adjustments.highlights !== 0 || adjustments.shadows !== 0) {
-      const luminance = (r + g + b) / 3;
-      const shadowsFactor = 1 + (adjustments.shadows / 100);
-      const highlightsFactor = 1 + (adjustments.highlights / 100);
+    // if (adjustments.highlights !== 0 || adjustments.shadows !== 0) {
+    //   const luminance = (r + g + b) / 3;
+    //   const shadowsFactor = 1 + (adjustments.shadows / 100);
+    //   const highlightsFactor = 1 + (adjustments.highlights / 100);
       
-      if (luminance < 128) {
-        const factor = shadowsFactor;
-        r *= factor;
-        g *= factor;
-        b *= factor;
-      } else {
-        const factor = highlightsFactor;
-        r *= factor;
-        g *= factor;
-        b *= factor;
-      }
-    }
+    //   if (luminance < 128) {
+    //     const factor = shadowsFactor;
+    //     r *= factor;
+    //     g *= factor;
+    //     b *= factor;
+    //   } else {
+    //     const factor = highlightsFactor;
+    //     r *= factor;
+    //     g *= factor;
+    //     b *= factor;
+    //   }
+    // }
 
     // Vibrance
     if (adjustments.vibrance !== 0) {
@@ -233,9 +233,75 @@ export function applyAdjustments(imageData: ImageData, adjustments: Adjustments)
 export function generateLUTData(
   originalStats: ColorStats,
   referenceStats: ColorStats,
+  adjustments: Adjustments,
   size: number = 32
 ): LUTData {
   const lut: RGB[][][] = [];
+
+  // Helper function to apply adjustments to RGB values
+  const applyAdjustmentsToValues = (r: number, g: number, b: number): { r: number, g: number, b: number } => {
+    // Convert to 0-255 range for adjustments
+    let adjustedR = r * 255;
+    let adjustedG = g * 255;
+    let adjustedB = b * 255;
+
+    // Apply contrast
+    if (adjustments.contrast !== 0) {
+      const factor = (100 + adjustments.contrast) / 100;
+      adjustedR = ((adjustedR / 255 - 0.5) * factor + 0.5) * 255;
+      adjustedG = ((adjustedG / 255 - 0.5) * factor + 0.5) * 255;
+      adjustedB = ((adjustedB / 255 - 0.5) * factor + 0.5) * 255;
+    }
+
+    // Apply brightness
+    if (adjustments.brightness !== 0) {
+      const factor = adjustments.brightness / 100;
+      adjustedR += factor * 255;
+      adjustedG += factor * 255;
+      adjustedB += factor * 255;
+    }
+
+    // Apply saturation
+    if (adjustments.saturation !== 0) {
+      const factor = (100 + adjustments.saturation) / 100;
+      const gray = (adjustedR + adjustedG + adjustedB) / 3;
+      adjustedR = gray + (adjustedR - gray) * factor;
+      adjustedG = gray + (adjustedG - gray) * factor;
+      adjustedB = gray + (adjustedB - gray) * factor;
+    }
+
+    // Apply temperature
+    if (adjustments.temperature !== 0) {
+      const factor = adjustments.temperature / 100;
+      adjustedR += factor * 20;
+      adjustedB -= factor * 20;
+    }
+
+    // Apply tint
+    if (adjustments.tint !== 0) {
+      const factor = adjustments.tint / 100;
+      adjustedG += factor * 20;
+    }
+
+    // Apply vibrance
+    if (adjustments.vibrance !== 0) {
+      const factor = adjustments.vibrance / 100;
+      const max = Math.max(adjustedR, adjustedG, adjustedB);
+      const avg = (adjustedR + adjustedG + adjustedB) / 3;
+      const amt = (Math.abs(max - avg) * 2) / 255 * factor;
+      
+      if (adjustedR !== max) adjustedR += (max - adjustedR) * amt;
+      if (adjustedG !== max) adjustedG += (max - adjustedG) * amt;
+      if (adjustedB !== max) adjustedB += (max - adjustedB) * amt;
+    }
+
+    // Clamp values to 0-255 range and normalize back to 0-1
+    return {
+      r: Math.max(0, Math.min(255, adjustedR)) / 255,
+      g: Math.max(0, Math.min(255, adjustedG)) / 255,
+      b: Math.max(0, Math.min(255, adjustedB)) / 255
+    };
+  };
 
   for (let b = 0; b < size; b++) {
     lut[b] = [];
@@ -274,13 +340,16 @@ export function generateLUTData(
             )
           ) / 255;
 
+        // Apply adjustments after color transfer
+        const adjustedColors = applyAdjustmentsToValues(transformedR, transformedG, transformedB);
+
         lut[b][g][r] = {
-          r: transformedR,
-          g: transformedG,
-          b: transformedB,
-          [0]: transformedR,
-          [1]: transformedG,
-          [2]: transformedB,
+          r: adjustedColors.r,
+          g: adjustedColors.g,
+          b: adjustedColors.b,
+          [0]: adjustedColors.r,
+          [1]: adjustedColors.g,
+          [2]: adjustedColors.b,
         };
       }
     }

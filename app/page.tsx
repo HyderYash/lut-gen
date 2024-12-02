@@ -123,7 +123,7 @@ const Home = () => {
         <div className="flex flex-col items-center justify-center mb-12">
           <Title />
           <p className="text-gray-400 mt-2 text-center">
-            Create professional color grading LUTs with AI-powered precision
+          Create Customized Luts in just a Click
           </p>
         </div>
 
@@ -215,6 +215,20 @@ const Home = () => {
 
         {/* Pricing Section */}
         <PricingCards />
+
+        {/* Contact Section */}
+        <div className="w-full max-w-4xl mx-auto mt-16 px-4">
+          <div className="bg-dark-800 rounded-2xl p-8 text-center">
+            <h2 className="text-2xl font-bold text-white mb-4">Need Customized LUTs?</h2>
+            <p className="text-gray-400 mb-6">Contact our team for personalized LUT creation services and custom solutions</p>
+            <a 
+              href="mailto:contact@lutgeneratorpro.com" 
+              className="inline-flex items-center gap-2 bg-[#00FF66]/90 hover:bg-[#00FF66] text-white font-semibold py-3 px-6 rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              Contact Team
+            </a>
+          </div>
+        </div>
 
         {/* Reviews Section */}
         <Reviews />

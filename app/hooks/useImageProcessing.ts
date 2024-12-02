@@ -19,8 +19,8 @@ export function useImageProcessing() {
     saturation: 0,
     temperature: 0,
     tint: 0,
-    highlights: 0,
-    shadows: 0,
+    // highlights: 0,
+    // shadows: 0,
     vibrance: 0
   });
 
@@ -44,7 +44,7 @@ export function useImageProcessing() {
 
     // Generate LUT data
     const origStats = calculateColorStats(originalImageData);
-    const lut = generateLUTData(origStats, refStats);
+    const lut = generateLUTData(origStats, refStats, adjustments);
     setLutData(lut);
 
     // Apply color transfer
@@ -56,7 +56,7 @@ export function useImageProcessing() {
       processedImage: imageDataToBase64(processedImageData),
       lutData: lut
     };
-  }, []);
+  }, [adjustments]);
 
   const updateAdjustments = useCallback((newAdjustments: Adjustments): string | null => {
     if (!baseImageData) return null;

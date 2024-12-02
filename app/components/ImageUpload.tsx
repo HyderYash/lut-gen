@@ -95,9 +95,10 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         {presetImages.length > 0 && (
           <button
             onClick={() => setShowPresets(!showPresets)}
-            className="text-primary hover:text-primary-light transition-colors"
+            className="flex items-center gap-2 text-primary hover:text-primary-light transition-colors"
           >
             <ImageIcon size={24} />
+            <span>Choose</span>
           </button>
         )}
       </div>
