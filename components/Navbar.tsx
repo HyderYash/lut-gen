@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { Info, LogOut, User, DollarSign, Link2, SquareUserRound, X } from "lucide-react"
+import { Info, LogOut, User, DollarSign, Link2, SquareUserRound, X, ImageIcon } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
 import Image from "next/image"
@@ -45,7 +45,7 @@ const Navbar = ({ setShowTutorial, setShowAffiliate, onImageSelect }: NavbarProp
                 className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
                 onClick={() => setShowGallery(true)}
               >
-                <Info size={20} />
+                <ImageIcon size={20} />
                 Gallery
               </motion.button>
               <motion.button
