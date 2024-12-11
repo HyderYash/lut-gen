@@ -6,24 +6,26 @@ import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
 import Image from "next/image"
 import { signOut, useSession } from "next-auth/react"
+import GalleryModal from "@/app/components/GalleryModal"
 
 interface NavbarProps {
   setShowTutorial: (show: boolean) => void
   setShowAffiliate?: (show: boolean) => void
+  onImageSelect?: (src: string) => void
 }
 
-const Navbar = ({ setShowTutorial, setShowAffiliate }: NavbarProps) => {
+const Navbar = ({ setShowTutorial, setShowAffiliate, onImageSelect }: NavbarProps) => {
   const [menuOpen, setMenuOpen] = useState<boolean>(false)
   const [showHowItWorks, setShowHowItWorks] = useState<boolean>(false)
+  const [showGallery, setShowGallery] = useState(false);
   const { data: session } = useSession()
 
   return (
     <>
-      <nav className="bg-black/20 backdrop-blur-sm text-white sticky top-0 z-50 shadow-xl border-b border-white/10">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2">
-            {/* Logo */}
-            <div className="relative">
+      <nav className="fixed top-0 left-0 right-0 z-40 bg-black/50 backdrop-blur-md border-b border-white/10">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-16">
+            <Link href="/" className="text-2xl font-bold text-white">
               <Image
                 src="/logo.png"
                 alt="LUT Builder AI Logo"
@@ -32,92 +34,111 @@ const Navbar = ({ setShowTutorial, setShowAffiliate }: NavbarProps) => {
                 className="w-auto h-[4rem]"
                 priority
               />
-            </div>
-          </Link>
+            </Link>
 
-          <div className="flex items-center gap-4">
-            <motion.button
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
-              onClick={() => setShowHowItWorks(true)}
-            >
-              <Info size={20} />
-              How it works
-            </motion.button>
-            {/* <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors cursor-pointer"
-            >
-              <DollarSign size={20} />
-              <Link href="/pricing">Pricing</Link>
-            </motion.div> */}
-            {session && (
-              <motion.div
+            <div className="flex items-center gap-4">
+              <motion.button
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+                onClick={() => setShowGallery(true)}
+              >
+                <Info size={20} />
+                Gallery
+              </motion.button>
+              <motion.button
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+                onClick={() => setShowHowItWorks(true)}
+              >
+                <Info size={20} />
+                How it works
+              </motion.button>
+              {/* <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors cursor-pointer"
               >
-                <Link2 size={20} />
-                <Link href="/affiliate">Affiliate</Link>
-              </motion.div>
-            )}
-            {session ? (
-              <div className="relative">
-                <motion.button
+                <DollarSign size={20} />
+                <Link href="/pricing">Pricing</Link>
+              </motion.div> */}
+              {session && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  <Link2 size={20} />
+                  <Link href="/affiliate">Affiliate</Link>
+                </motion.div>
+              )}
+              {session ? (
+                <div className="relative">
+                  <motion.button
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+                    onClick={() => setMenuOpen((prev) => !prev)}
+                  >
+                    {session.user?.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={session.user.image}
+                        alt={session.user.name || "User"}
+                        className="w-8 h-8 rounded-full"
+                      />
+                    ) : (
+                      <User className="w-8 h-8 text-white border border-white/20 rounded-full p-1" />
+                    )}
+                  </motion.button>
+                  {menuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white text-black rounded-md shadow-lg border border-gray-200">
+                      <button
+                        onClick={() => signOut()}
+                        className="flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-gray-100 transition"
+                      >
+                        <LogOut className="w-5 h-5 text-gray-600" />
+                        <span>Logout</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <motion.div
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
-                  onClick={() => setMenuOpen((prev) => !prev)}
                 >
-                  {session.user?.image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={session.user.image}
-                      alt={session.user.name || "User"}
-                      className="w-8 h-8 rounded-full"
-                    />
-                  ) : (
-                    <User className="w-8 h-8 text-white border border-white/20 rounded-full p-1" />
-                  )}
-                </motion.button>
-                {menuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white text-black rounded-md shadow-lg border border-gray-200">
-                    <button
-                      onClick={() => signOut()}
-                      className="flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-gray-100 transition"
-                    >
-                      <LogOut className="w-5 h-5 text-gray-600" />
-                      <span>Logout</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
-              >
-                <SquareUserRound size={20} />
-                <Link href="/auth/signin">Get Started</Link>
-              </motion.div>
-            )}
+                  <SquareUserRound size={20} />
+                  <Link href="/auth/signin">Get Started</Link>
+                </motion.div>
+              )}
+            </div>
           </div>
         </div>
       </nav>
-
+      <GalleryModal
+        isOpen={showGallery}
+        onClose={() => setShowGallery(false)}
+        onImageSelect={(src) => {
+          if (onImageSelect) {
+            onImageSelect(src);
+          }
+        }}
+      />
       {/* How it Works Modal */}
       <AnimatePresence>
         {showHowItWorks && (

@@ -53,13 +53,13 @@ const referencePresets = [
   { id: 'water-diviner', src: '/reference-images/The water Diviner.jpg', alt: 'The Water Diviner' }
 ];
 
-const Home = () => {
+export default function Home() {
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [referenceImage, setReferenceImage] = useState<string | null>(null);
   const [processedImage, setProcessedImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [showTutorial, setShowTutorial] = useState<boolean>(false);
-  const [showAffilate, setShowAffiliate] = useState<boolean>(false);
+  const [showAffiliate, setShowAffiliate] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [credits, setCredits] = useState<number | null>(null);
   const [showPopup, setShowPopup] = useState<boolean>(false);
@@ -117,9 +117,13 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Navbar setShowTutorial={setShowTutorial} setShowAffiliate={setShowAffiliate} />
+      <Navbar 
+        onImageSelect={(src) => setReferenceImage(src)} 
+        setShowTutorial={setShowTutorial} 
+        setShowAffiliate={setShowAffiliate} 
+      />
       
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 pt-24 pb-8">
         <div className="flex flex-col items-center justify-center mb-12">
           <Title />
           <p className="text-gray-400 mt-2 text-center">
@@ -245,11 +249,7 @@ const Home = () => {
         </div>
       )}
 
-      {showAffilate && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          {/* Affiliate content */}
-        </div>
-      )}
+
 
       {isProcessing && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
@@ -267,5 +267,3 @@ const Home = () => {
     </div>
   );
 };
-
-export default Home;
