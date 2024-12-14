@@ -7,6 +7,8 @@ import Link from "next/link"
 import Image from "next/image"
 import { signOut, useSession } from "next-auth/react"
 import GalleryModal from "@/app/components/GalleryModal"
+import { event } from '@/components/GoogleAnalytics'
+
 
 interface NavbarProps {
   setShowTutorial: (show: boolean) => void
@@ -19,6 +21,16 @@ const Navbar = ({ setShowTutorial, setShowAffiliate, onImageSelect }: NavbarProp
   const [showHowItWorks, setShowHowItWorks] = useState<boolean>(false)
   const [showGallery, setShowGallery] = useState(false);
   const { data: session } = useSession()
+
+  const handleGalleryOpen = () => {
+    setShowGallery(true);
+    event('gallery_modal_open', 'engagement', 'Gallery Modal Opened');
+  };
+
+  const handleHowItWorksOpen = () => {
+    setShowHowItWorks(true);
+    event('how_it_works_modal_open', 'engagement', 'How It Works Modal Opened');
+  };
 
   return (
     <>
@@ -43,7 +55,7 @@ const Navbar = ({ setShowTutorial, setShowAffiliate, onImageSelect }: NavbarProp
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
-                onClick={() => setShowGallery(true)}
+                onClick={handleGalleryOpen}
               >
                 <ImageIcon size={20} />
                 Gallery
@@ -54,7 +66,7 @@ const Navbar = ({ setShowTutorial, setShowAffiliate, onImageSelect }: NavbarProp
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
-                onClick={() => setShowHowItWorks(true)}
+                onClick={handleHowItWorksOpen}
               >
                 <Info size={20} />
                 How it works

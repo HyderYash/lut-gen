@@ -3,6 +3,8 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import TanStackProvider from "./components/providers/TanStackProvider"
 import AuthProvider from "./components/providers/AuthProvider"
+import { GoogleAnalytics } from '@/components/GoogleAnalytics'
+
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -20,7 +22,10 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <AuthProvider>
-          <TanStackProvider>{children}</TanStackProvider>
+          <TanStackProvider>
+            {children}
+            <GoogleAnalytics measurementId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
+          </TanStackProvider>
         </AuthProvider>
       </body>
     </html>

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
+import { event } from '@/components/GoogleAnalytics';
 
 interface GalleryModalProps {
   isOpen: boolean;
@@ -46,6 +47,12 @@ const presetImages = [
 const GalleryModal = ({ isOpen, onClose, onImageSelect }: GalleryModalProps) => {
   const [hoveredPreset, setHoveredPreset] = useState<string | null>(null);
 
+  const handleImageSelect = (src: string) => {
+    onImageSelect(src);
+    event('reference_image_gallery_select', 'engagement', `Selected Reference: ${src.split('/').pop()}`);
+    onClose();
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -87,10 +94,7 @@ const GalleryModal = ({ isOpen, onClose, onImageSelect }: GalleryModalProps) => 
                     key={preset.id}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                      onImageSelect(preset.src);
-                      onClose();
-                    }}
+                    onClick={() => handleImageSelect(preset.src)}
                     onMouseEnter={() => setHoveredPreset(preset.id)}
                     onMouseLeave={() => setHoveredPreset(null)}
                     className="relative aspect-video rounded-lg overflow-hidden shadow-lg cursor-pointer bg-black/20"

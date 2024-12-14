@@ -19,6 +19,7 @@ import PricingCards from "../components/PricingCards";
 import AdjustmentPanel from "./components/AdjustmentPanel"; // Import AdjustmentPanel
 import ExportPanel from "./components/ExportPanel"; // Import ExportPanel
 import { Palette, Zap, Eye, WandSparkles } from "lucide-react";
+import { event } from '@/components/GoogleAnalytics'
 
 const referencePresets = [
   { id: 'tokyo-twilight', src: '/reference-images/Tokyo Twilight.jpg', alt: 'Tokyo Twilight' },
@@ -87,15 +88,27 @@ export default function Home() {
     return () => clearInterval(intervalId);
   }, [session]);
 
+  const handleImageUpload = (image: string) => {
+    setOriginalImage(image);
+    event('image_upload', 'engagement', 'Original Image Uploaded');
+  };
+
+  const handleReferenceImageSelect = (image: string) => {
+    setReferenceImage(image);
+    event('reference_image_select', 'engagement', 'Reference Image Selected');
+  };
+
   const handleProcess = async () => {
     if (!originalImage || !referenceImage) return;
 
     setIsProcessing(true);
     setError(null);
+    event('lut_generation_start', 'conversion', 'LUT Generation Initiated');
 
     try {
       const { processedImage: newProcessedImage } = await processImages(originalImage, referenceImage);
       setProcessedImage(newProcessedImage);
+      event('lut_generation_success', 'conversion', 'LUT Generation Successful');
       
       // Decrease credits after successful processing
       const response = await fetch('/api/decrease-credits', {
@@ -109,16 +122,26 @@ export default function Home() {
       }
     } catch (error: any) {
       setError(error?.message || 'An error occurred during processing');
+      event('lut_generation_error', 'error', 'LUT Generation Failed');
       console.error('Processing error:', error);
     } finally {
       setIsProcessing(false);
     }
   };
 
+  const handleDownloadLUT = () => {
+    if (processedImage) {
+      event('lut_download', 'conversion', 'LUT Downloaded');
+      downloadLUT();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black text-white">
       <Navbar 
-        onImageSelect={(src) => setReferenceImage(src)} 
+        onImageSelect={(src) => {
+          handleReferenceImageSelect(src);
+        }} 
         setShowTutorial={setShowTutorial} 
         setShowAffiliate={setShowAffiliate} 
       />
@@ -135,13 +158,13 @@ export default function Home() {
           <ImageUpload
             title="Original Image"
             image={originalImage}
-            onImageSelect={setOriginalImage}
+            onImageSelect={handleImageUpload}
             onImageRemove={() => setOriginalImage(null)}
           />
           <ImageUpload
             title="Reference Image"
             image={referenceImage}
-            onImageSelect={setReferenceImage}
+            onImageSelect={handleReferenceImageSelect}
             onImageRemove={() => setReferenceImage(null)}
             presetImages={referencePresets}
           />
@@ -187,7 +210,7 @@ export default function Home() {
                   }
                 }}
               />
-              <ExportPanel onExport={downloadLUT} />
+              <ExportPanel onExport={handleDownloadLUT} />
             </div>
           </>
         )}
