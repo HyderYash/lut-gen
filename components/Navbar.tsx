@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { Info, LogOut, User, DollarSign, Link2, SquareUserRound, X, ImageIcon } from "lucide-react"
+import { Info, LogOut, User, DollarSign, Link2, SquareUserRound, X, ImageIcon, Rss, SquareChevronDown } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
 import Image from "next/image"
@@ -11,12 +11,10 @@ import { event } from '@/components/GoogleAnalytics'
 
 
 interface NavbarProps {
-  setShowTutorial: (show: boolean) => void
-  setShowAffiliate?: (show: boolean) => void
   onImageSelect?: (src: string) => void
 }
 
-const Navbar = ({ setShowTutorial, setShowAffiliate, onImageSelect }: NavbarProps) => {
+const Navbar = ({  onImageSelect }: NavbarProps) => {
   const [menuOpen, setMenuOpen] = useState<boolean>(false)
   const [showHowItWorks, setShowHowItWorks] = useState<boolean>(false)
   const [showGallery, setShowGallery] = useState(false);
@@ -71,16 +69,26 @@ const Navbar = ({ setShowTutorial, setShowAffiliate, onImageSelect }: NavbarProp
                 <Info size={20} />
                 How it works
               </motion.button>
-              {/* <motion.div
+              <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors cursor-pointer"
               >
-                <DollarSign size={20} />
-                <Link href="/pricing">Pricing</Link>
-              </motion.div> */}
+                <SquareChevronDown size={20} />
+                <Link href="/about-us">About Us</Link>
+              </motion.div>
+              <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  <Rss size={20} />
+                  <Link href="/blog">Blog</Link>
+                </motion.div>
               {session && (
                 <motion.div
                   initial={{ opacity: 0, x: 20 }}

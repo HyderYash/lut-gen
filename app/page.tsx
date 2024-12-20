@@ -142,8 +142,6 @@ export default function Home() {
         onImageSelect={(src) => {
           handleReferenceImageSelect(src);
         }} 
-        setShowTutorial={setShowTutorial} 
-        setShowAffiliate={setShowAffiliate} 
       />
       
       <main className="container mx-auto px-4 pt-24 pb-8">
@@ -249,7 +247,7 @@ export default function Home() {
             <h2 className="text-2xl font-bold text-white mb-4">Need Customized LUTs?</h2>
             <p className="text-gray-400 mb-6">Contact our team for personalized LUT creation services and custom solutions</p>
             <a 
-              href="mailto:contact@lutgeneratorpro.com" 
+              href="mailto:support@lutbuilder.ai" 
               className="inline-flex items-center gap-2 bg-[#00FF66]/90 hover:bg-[#00FF66] text-white font-semibold py-3 px-6 rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               Contact Team

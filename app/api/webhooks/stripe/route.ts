@@ -92,7 +92,7 @@ export async function POST(req: Request) {
                             name: session.customer_details?.name || customerEmail,
                             customerId: session.customer as string,
                             plan: "Free", // Default plan
-                            credits: 15, // Default credits
+                            credits: 10, // Default credits
                             referralCode // Add the unique referral code
                         }
                     });
@@ -159,7 +159,7 @@ export async function POST(req: Request) {
                     where: { id: user.id },
                     data: {
                         plan: "Free",
-                        credits: 15
+                        credits: 10
                     }
                 });
 

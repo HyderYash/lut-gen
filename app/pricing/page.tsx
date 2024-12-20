@@ -28,7 +28,7 @@ const plans: Plan[] = [
         title: "Free",
         price: "$0",
         features: [
-            "15 LUTs generations per month",
+            "10 LUTs generations per month",
             "Basic color matching",
             "Standard export formats",
             "Community support",

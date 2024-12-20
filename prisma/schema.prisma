@@ -46,7 +46,7 @@ model User {
   password        String?
   plan            String    @default("Free")
   customerId      String?   @unique
-  credits         Int       @default(15)
+  credits         Int       @default(10)
   
   // Affiliate System
   referralCode    String?   

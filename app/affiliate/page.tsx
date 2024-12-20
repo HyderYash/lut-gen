@@ -20,7 +20,7 @@ export default function AffiliatePage() {
   if (status === "loading") {
     return (
       <div className="min-h-screen bg-[#0A0A0A] overflow-x-hidden">
-        <Navbar setShowTutorial={() => {}} setShowAffiliate={() => {}} />
+        <Navbar />
         <div className="flex items-center justify-center min-h-[80vh]">
           <div className="text-center">
             <motion.div

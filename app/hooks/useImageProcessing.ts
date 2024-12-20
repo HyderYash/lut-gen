@@ -72,7 +72,7 @@ export function useImageProcessing() {
       return;
     }
     try {
-      const zipBlob = await createLUTZipFile(lutData);
+      const zipBlob = await createLUTZipFile(lutData, adjustments);
       const url = URL.createObjectURL(zipBlob);
       
       const link = document.createElement('a');
@@ -85,7 +85,7 @@ export function useImageProcessing() {
     } catch (error) {
       console.error('Error creating LUT zip file:', error);
     }
-  }, [lutData]);
+  }, [lutData, adjustments]);
 
   return { processImages, downloadLUT, lutData, adjustments, updateAdjustments };
 }
