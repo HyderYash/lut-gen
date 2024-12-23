@@ -1,34 +1,111 @@
-"use client"
+"use client";
 
-import React, { useState } from "react"
-import { Info, LogOut, User, DollarSign, Link2, SquareUserRound, X, ImageIcon, Rss, SquareChevronDown } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
-import Link from "next/link"
-import Image from "next/image"
-import { signOut, useSession } from "next-auth/react"
-import GalleryModal from "@/app/components/GalleryModal"
-import { event } from '@/components/GoogleAnalytics'
-
+import React, { useState } from "react";
+import {
+  Info,
+  LogOut,
+  User,
+  DollarSign,
+  Link2,
+  SquareUserRound,
+  X,
+  ImageIcon,
+  Rss,
+  SquareChevronDown,
+  Menu,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
+import Image from "next/image";
+import { signOut, useSession } from "next-auth/react";
+import GalleryModal from "@/app/components/GalleryModal";
+import { event } from "@/lib/analytics";
 
 interface NavbarProps {
-  onImageSelect?: (src: string) => void
+  onImageSelect?: (src: string) => void;
 }
 
-const Navbar = ({  onImageSelect }: NavbarProps) => {
-  const [menuOpen, setMenuOpen] = useState<boolean>(false)
-  const [showHowItWorks, setShowHowItWorks] = useState<boolean>(false)
+const Navbar = ({ onImageSelect }: NavbarProps) => {
+  const [menuOpen, setMenuOpen] = useState<boolean>(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
+  const [showHowItWorks, setShowHowItWorks] = useState<boolean>(false);
   const [showGallery, setShowGallery] = useState(false);
-  const { data: session } = useSession()
+  const { data: session } = useSession();
 
   const handleGalleryOpen = () => {
     setShowGallery(true);
-    event('gallery_modal_open', 'engagement', 'Gallery Modal Opened');
+    setMobileMenuOpen(false);
+    event("gallery_modal_open", "engagement", "Gallery Modal Opened");
   };
 
   const handleHowItWorksOpen = () => {
     setShowHowItWorks(true);
-    event('how_it_works_modal_open', 'engagement', 'How It Works Modal Opened');
+    setMobileMenuOpen(false);
+    event("how_it_works_modal_open", "engagement", "How It Works Modal Opened");
   };
+
+  const NavLinks = () => (
+    <>
+      <motion.button
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+        onClick={handleGalleryOpen}
+      >
+        <ImageIcon size={20} />
+        <span>Gallery</span>
+      </motion.button>
+      
+      <motion.button
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+        onClick={handleHowItWorksOpen}
+      >
+        <Info size={20} />
+        <span>How it works</span>
+      </motion.button>
+
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors cursor-pointer"
+      >
+        <SquareChevronDown size={20} />
+        <Link href="/about-us">About Us</Link>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors cursor-pointer"
+      >
+        <Rss size={20} />
+        <Link href="/blog">Blog</Link>
+      </motion.div>
+
+      {session && (
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors cursor-pointer"
+        >
+          <Link2 size={20} />
+          <Link href="/affiliate">Affiliate</Link>
+        </motion.div>
+      )}
+    </>
+  );
 
   return (
     <>
@@ -46,61 +123,9 @@ const Navbar = ({  onImageSelect }: NavbarProps) => {
               />
             </Link>
 
-            <div className="flex items-center gap-4">
-              <motion.button
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
-                onClick={handleGalleryOpen}
-              >
-                <ImageIcon size={20} />
-                Gallery
-              </motion.button>
-              <motion.button
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
-                onClick={handleHowItWorksOpen}
-              >
-                <Info size={20} />
-                How it works
-              </motion.button>
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors cursor-pointer"
-              >
-                <SquareChevronDown size={20} />
-                <Link href="/about-us">About Us</Link>
-              </motion.div>
-              <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors cursor-pointer"
-                >
-                  <Rss size={20} />
-                  <Link href="/blog">Blog</Link>
-                </motion.div>
-              {session && (
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors cursor-pointer"
-                >
-                  <Link2 size={20} />
-                  <Link href="/affiliate">Affiliate</Link>
-                </motion.div>
-              )}
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-4">
+              <NavLinks />
               {session ? (
                 <div className="relative">
                   <motion.button
@@ -112,7 +137,6 @@ const Navbar = ({  onImageSelect }: NavbarProps) => {
                     onClick={() => setMenuOpen((prev) => !prev)}
                   >
                     {session.user?.image ? (
-                      // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={session.user.image}
                         alt={session.user.name || "User"}
@@ -122,17 +146,24 @@ const Navbar = ({  onImageSelect }: NavbarProps) => {
                       <User className="w-8 h-8 text-white border border-white/20 rounded-full p-1" />
                     )}
                   </motion.button>
-                  {menuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white text-black rounded-md shadow-lg border border-gray-200">
-                      <button
-                        onClick={() => signOut()}
-                        className="flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-gray-100 transition"
+                  <AnimatePresence>
+                    {menuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute right-0 mt-2 w-48 bg-white text-black rounded-md shadow-lg border border-gray-200"
                       >
-                        <LogOut className="w-5 h-5 text-gray-600" />
-                        <span>Logout</span>
-                      </button>
-                    </div>
-                  )}
+                        <button
+                          onClick={() => signOut()}
+                          className="flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-gray-100 transition"
+                        >
+                          <LogOut className="w-5 h-5 text-gray-600" />
+                          <span>Logout</span>
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               ) : (
                 <motion.div
@@ -147,9 +178,53 @@ const Navbar = ({  onImageSelect }: NavbarProps) => {
                 </motion.div>
               )}
             </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              className="md:hidden text-gray-400 hover:text-white transition-colors"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
           </div>
+
+          {/* Mobile Navigation */}
+          <AnimatePresence>
+            {mobileMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="md:hidden py-4 space-y-4"
+              >
+                <div className="flex flex-col gap-4">
+                  <NavLinks />
+                  {session ? (
+                    <button
+                      onClick={() => signOut()}
+                      className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+                    >
+                      <LogOut size={20} />
+                      <span>Logout</span>
+                    </button>
+                  ) : (
+                    <motion.div
+                      className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+                    >
+                      <SquareUserRound size={20} />
+                      <Link href="/auth/signin">Get Started</Link>
+                    </motion.div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </nav>
+
+      {/* Add a spacer to prevent content from being hidden under the navbar */}
+      <div className="h-16" />
+
       <GalleryModal
         isOpen={showGallery}
         onClose={() => setShowGallery(false)}
@@ -159,6 +234,7 @@ const Navbar = ({  onImageSelect }: NavbarProps) => {
           }
         }}
       />
+
       {/* How it Works Modal */}
       <AnimatePresence>
         {showHowItWorks && (
@@ -271,44 +347,8 @@ const Navbar = ({  onImageSelect }: NavbarProps) => {
           </>
         )}
       </AnimatePresence>
-      <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 8px;
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(0, 0, 0, 0.2);
-          border-radius: 4px;
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(16, 185, 129, 0.2);
-          border-radius: 4px;
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(16, 185, 129, 0.4);
-        }
-
-        @keyframes gradient-shift {
-          0% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-          100% {
-            background-position: 0% 50%;
-          }
-        }
-
-        .animate-gradient-shift {
-          animation: gradient-shift 8s ease infinite;
-          background-size: 200% 200%;
-        }
-      `}</style>
     </>
-  )
-}
+  );
+};
 
-export default Navbar
+export default Navbar;

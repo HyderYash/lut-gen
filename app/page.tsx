@@ -19,7 +19,7 @@ import PricingCards from "../components/PricingCards";
 import AdjustmentPanel from "./components/AdjustmentPanel"; // Import AdjustmentPanel
 import ExportPanel from "./components/ExportPanel"; // Import ExportPanel
 import { Palette, Zap, Eye, WandSparkles } from "lucide-react";
-import { event } from '@/components/GoogleAnalytics'
+import { event } from '@/lib/analytics'
 
 const referencePresets = [
   { id: 'tokyo-twilight', src: '/reference-images/Tokyo Twilight.jpg', alt: 'Tokyo Twilight' },

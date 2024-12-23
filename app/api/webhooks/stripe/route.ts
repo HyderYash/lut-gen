@@ -2,6 +2,7 @@ import prisma from "@/db/prisma";
 import { stripe } from "@/lib/stripe";
 import Stripe from "stripe";
 import { customAlphabet } from 'nanoid';
+import EmailService from "@/lib/emailService";
 
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET!;
 
@@ -59,6 +60,7 @@ export async function POST(req: Request) {
 
                 let plan: string;
                 let credits: number;
+                let amount: number = 0;
 
                 // Determine plan details based on price ID
                 switch (priceId) {
@@ -66,11 +68,13 @@ export async function POST(req: Request) {
                     case process.env.STRIPE_STANDARD_YEARLY_PRICE_ID:
                         plan = "Standard";
                         credits = 100;
+                        amount = 9.99; // Monthly price
                         break;
                     case process.env.STRIPE_PREMIUM_MONTHLY_PRICE_ID:
                     case process.env.STRIPE_PREMIUM_YEARLY_PRICE_ID:
                         plan = "Premium";
                         credits = -1; // Unlimited
+                        amount = 19.99; // Monthly price
                         break;
                     default:
                         throw new Error(`Unknown price ID: ${priceId}`);
@@ -107,6 +111,21 @@ export async function POST(req: Request) {
                         credits,
                         customerId: session.customer as string
                     }
+                });
+
+                // Send payment confirmation email
+                await EmailService.sendPaymentConfirmation(
+                    customerEmail, 
+                    user.name || customerEmail.split('@')[0], 
+                    plan, 
+                    amount
+                );
+
+                // Send admin notification
+                await EmailService.sendAdminNotification('payment', {
+                    email: customerEmail,
+                    plan,
+                    amount
                 });
 
                 console.log(`Successfully updated subscription for user ${user.id}`);

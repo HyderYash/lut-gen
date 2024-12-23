@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import { event } from '@/components/GoogleAnalytics';
+import { event } from '@/lib/analytics';
 
 interface GalleryModalProps {
   isOpen: boolean;

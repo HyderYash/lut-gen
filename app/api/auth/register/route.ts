@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import { PLANS } from "@/constants/plans"
+import EmailService from "@/lib/emailService"
 
 export async function POST(req: Request) {
   try {
@@ -45,6 +46,15 @@ export async function POST(req: Request) {
         usedReferralCode: referralCode || undefined,
       },
     })
+
+    // Send welcome email to user
+    await EmailService.sendSignupNotification(email, email.split('@')[0]);
+
+    // Send admin notification
+    await EmailService.sendAdminNotification('signup', {
+      email: user.email,
+      name: email.split('@')[0]
+    });
 
     return NextResponse.json(
       { message: "User created successfully", user: { email: user.email } },

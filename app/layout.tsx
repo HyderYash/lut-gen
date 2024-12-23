@@ -3,9 +3,9 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import TanStackProvider from "./components/providers/TanStackProvider"
 import AuthProvider from "./components/providers/AuthProvider"
-import { GoogleAnalytics } from '@/components/GoogleAnalytics'
 import SearchParamsWrapper from "./components/SearchParamsWrapper"
 import { JsonLd } from "./components/JsonLd"
+import { GoogleAnalytics } from '@next/third-parties/google'
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -96,7 +96,7 @@ export default function RootLayout({
           <AuthProvider>
             <TanStackProvider>
               {children}
-              <GoogleAnalytics measurementId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
+              <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID || ''} />
             </TanStackProvider>
           </AuthProvider>
         </SearchParamsWrapper>
